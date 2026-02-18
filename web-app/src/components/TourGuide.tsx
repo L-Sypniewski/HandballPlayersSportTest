@@ -36,7 +36,7 @@ const tourSteps = [
     element: '#download-btn',
     popover: {
       title: 'Pobieranie pliku',
-      description: 'Po zakończeniu edycji kliknij tutaj, aby pobrać plik XLSX ze wszystkimi zmianami.',
+      description: 'Po zakończeniu edycji kliknij tutaj, aby pobrać plik XLSX ze wszystkimi zmianami. Plik zostanie zapisany z aktualną datą i godziną w nazwie, więc Twój oryginalny plik pozostanie bez zmian.',
       side: 'bottom' as const,
       align: 'center' as const,
     },
@@ -69,7 +69,7 @@ const tourSteps = [
     },
   },
   {
-    element: '#player-table',
+    element: '#player-table-mrt',
     popover: {
       title: 'Tabela zawodników',
       description: 'Tutaj edytujesz dane zawodników. Kliknij na komórkę, aby zmienić wartość.',
@@ -99,7 +99,7 @@ const tourSteps = [
     element: '#medicine-ball-col',
     popover: {
       title: 'Rzut piłką lekarską',
-      description: 'Wprowadź odległość rzutu przodem i tyłem. Suma jest obliczana automatycznie.',
+      description: 'Wprowadź odległość rzutu przodem i tyłem. Suma oraz wynik punktowy są obliczane automatycznie.',
       side: 'bottom' as const,
       align: 'center' as const,
     },
@@ -108,7 +108,7 @@ const tourSteps = [
     element: '#other-scores-col',
     popover: {
       title: 'Punktacja ręczna',
-      description: 'Wyniki dla pięcioskoku, rzutu ręcznego i koperty musisz wprowadzić ręcznie, korzystając z tabeli punktacji. Automatycznie obliczany jest tylko sprint 30m oraz suma rzutów piłką lekarską.',
+      description: 'Wyniki dla rzutu ręcznego i koperty musisz wprowadzić ręcznie. Automatycznie obliczane są: sprint 30m, piłka lekarska oraz pięcioskok.',
       side: 'bottom' as const,
       align: 'center' as const,
     },

@@ -53,10 +53,10 @@ web-app/src/
 #### Data Model
 The `Player` interface tracks 5 test categories:
 - **30m Sprint**: `sprint30m_time` → `sprint30m_score` (auto-calculated)
-- **Medicine Ball**: `medicineBall_forward`, `medicineBall_backward` → `medicineBall_sum` (auto) → `medicineBall_score`
-- **Five-Jump**: `fiveJump_distance` → `fiveJump_score`
-- **Hand Throw**: `handThrow_distance` → `handThrow_score`
-- **Envelope**: `envelope_time` → `envelope_score`
+- **Medicine Ball**: `medicineBall_forward`, `medicineBall_backward` → `medicineBall_sum` (auto) → `medicineBall_score` (auto-calculated)
+- **Five-Jump**: `fiveJump_distance` → `fiveJump_score` (auto-calculated)
+- **Hand Throw**: `handThrow_distance` → `handThrow_score` (manual entry)
+- **Envelope**: `envelope_time` → `envelope_score` (manual entry)
 
 Each Excel sheet becomes a `Group` with its own `players` array.
 
@@ -67,7 +67,9 @@ Each Excel sheet becomes a `Group` with its own `players` array.
 #### Auto-Calculations
 - **30m Sprint score**: Auto-calculated via `calculateSprint30mScore()` in `scoring.ts`
 - **Medicine Ball sum**: Auto-calculated (forward + backward)
-- **All other scores**: Manually entered (no scoring functions implemented yet)
+- **Medicine Ball score**: Auto-calculated via `calculateMedicineBallScore()` in `scoring.ts`
+- **Five-Jump score**: Auto-calculated via `calculateFiveJumpScore()` in `scoring.ts`
+- **Hand Throw & Envelope scores**: Manually entered (no scoring tables available)
 
 #### Product Tour
 The app includes an interactive product tour using **driver.js**:
@@ -81,17 +83,23 @@ The app includes an interactive product tour using **driver.js**:
 
 Scoring tables are based on **Test sprawności ukierunkowanej – J. Noszczaka**. The `/punktacja` page displays all scoring tables.
 
-**Only 30m sprint scoring is implemented** in both the Delphi app (`UnitLiczPunkty.pas`) and web app (`scoring.ts`). The scoring table:
+### Implemented Scoring Functions
+
+**30m Sprint** (`calculateSprint30mScore`):
 - ≤3.70s → 80 points (max)
 - Time ranges have different step sizes (0.02s, 0.04s, 0.05s, 0.10s)
 - >5.90s → 0 points
 
-**Available scoring tables (in PDF `Test-sprawności-fizycznej-piłka-ręczna.pdf`):**
-- 30m Sprint ✓ (implemented)
-- Medicine Ball 2kg throw (sum) - manual entry
-- Five-Jump (distance) - manual entry
-- 300m Shuttle Run - not implemented (app uses "Envelope/Koperta" test instead)
+**Medicine Ball 2kg** (`calculateMedicineBallScore`) - based on sum of forward + backward throws:
+- ≥30.00m → 80 points (max)
+- Distance ranges have different step sizes (0.20m, 0.50m)
+- <14.50m → 0 points
 
-**No scoring tables available for:**
-- Hand Throw (Rzut ręczny)
-- Envelope test (Koperta)
+**Five-Jump** (`calculateFiveJumpScore`) - based on total distance:
+- ≥13.50m → 80 points (max)
+- Distance ranges have different step sizes (0.05m, 0.10m, 0.20m)
+- <7.80m → 0 points
+
+### No Scoring Tables Available
+- Hand Throw (Rzut ręczny) - manual entry only
+- Envelope test (Koperta) - manual entry only
