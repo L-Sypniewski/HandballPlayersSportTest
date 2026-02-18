@@ -6,46 +6,28 @@ const TOUR_COMPLETED_KEY = 'handball-tour-completed';
 
 const tourSteps = [
   {
-    element: '#file-controls',
+    element: '#file-manager',
     popover: {
-      title: 'Kontrolki plików',
-      description: 'Tutaj możesz przesłać istniejący plik Excel, utworzyć nowy plik lub pobrać zmienione dane.',
+      title: 'Menedżer plików',
+      description: 'Tutaj możesz przesłać plik Excel, utworzyć nowy plik lub wybrać wcześniej zapisany. Twoje dane zapisują się automatycznie w pamięci przeglądarki.',
       side: 'bottom' as const,
       align: 'start' as const,
     },
   },
   {
-    element: '#upload-btn',
+    element: '#file-controls',
     popover: {
-      title: 'Przesyłanie pliku',
-      description: 'Kliknij tutaj, aby przesłać plik XLSX z danymi zawodników. Każdy arkusz Excel zostanie załadowany jako osobna grupa (np. rocznik lub drużyna).',
+      title: 'Pasek narzędzi',
+      description: 'Po otwarciu pliku zobaczysz tutaj jego nazwę oraz opcje pobierania, samouczka i tabeli punktacji.',
       side: 'bottom' as const,
-      align: 'center' as const,
-    },
-  },
-  {
-    element: '#new-file-btn',
-    popover: {
-      title: 'Nowy plik',
-      description: 'Rozpocznij od nowa z pustym plikiem. Możesz dodać zawodników i grupy według potrzeb.',
-      side: 'bottom' as const,
-      align: 'center' as const,
+      align: 'start' as const,
     },
   },
   {
     element: '#download-btn',
     popover: {
       title: 'Pobieranie pliku',
-      description: 'Po zakończeniu edycji kliknij tutaj, aby pobrać plik XLSX ze wszystkimi zmianami. Plik zostanie zapisany z aktualną datą i godziną w nazwie, więc Twój oryginalny plik pozostanie bez zmian.',
-      side: 'bottom' as const,
-      align: 'center' as const,
-    },
-  },
-  {
-    element: '#unsaved-indicator',
-    popover: {
-      title: 'Wskaźnik niezapisanych zmian',
-      description: 'Ten wskaźnik pojawia się, gdy masz niezapisane zmiany. Pamiętaj, aby pobrać plik przed zamknięciem strony!',
+      description: 'Po zakończeniu edycji kliknij tutaj, aby pobrać plik XLSX ze wszystkimi zmianami. Plik zostanie zapisany z aktualną datą i godziną w nazwie.',
       side: 'bottom' as const,
       align: 'center' as const,
     },
