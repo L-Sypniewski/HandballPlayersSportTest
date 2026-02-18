@@ -198,13 +198,21 @@ export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTable
               textAlign: 'center',
               borderBottom: `2px solid ${groupColors[colId] || '#2c5282'}`,
               boxShadow: column.getIsPinned() ? '2px 0 4px rgba(0,0,0,0.2)' : 'none',
+              '& .MuiBadge-root, & .MuiIconButton-root, & svg': {
+                color: '#ffffff !important',
+              },
+              '& button': {
+                color: '#ffffff !important',
+              },
             },
           };
         }}
         muiColumnActionsButtonProps={{
           sx: {
-            color: '#ffffff',
-            '&:hover': { color: '#e2e8f0' },
+            color: '#ffffff !important',
+            opacity: 1,
+            '&:hover': { color: '#e2e8f0 !important', opacity: 0.9 },
+            '& svg': { color: '#ffffff !important' },
           },
         }}
         muiTableBodyRowProps={({ row }) => ({
