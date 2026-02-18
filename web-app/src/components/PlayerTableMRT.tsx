@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
 import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import type { Player } from '../lib/types';
@@ -8,6 +8,7 @@ import { calculateSprint30mScore, calculateMedicineBallScore, calculateFiveJumpS
 interface PlayerTableProps {
   players: Player[];
   onUpdatePlayers: (players: Player[]) => void;
+  resetScrollKey?: number | string; // Change this to reset scroll position
 }
 
 // Validation rules for numeric fields
@@ -38,10 +39,18 @@ const PLACEHOLDERS: Record<string, string> = {
 
 type PlayerWithRowNumber = Player & { rowNumber: number };
 
-export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTableProps) {
+export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKey }: PlayerTableProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Reset scroll to left when resetScrollKey changes
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollLeft = 0;
+    }
+  }, [resetScrollKey]);
 
   // Check if a player row is valid (has required fields)
   const isPlayerValid = (player: Player): boolean => {
@@ -220,6 +229,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTable
           };
         }}
         muiTableContainerProps={{
+          ref: tableContainerRef,
           sx: { maxHeight: '600px' },
         }}
         muiTableHeadCellProps={({ column }) => {

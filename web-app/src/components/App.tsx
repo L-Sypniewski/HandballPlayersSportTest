@@ -26,6 +26,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isTourActive, setIsTourActive] = useState(false);
+  const [scrollResetKey, setScrollResetKey] = useState(0); // Key to reset table scroll
   const { startTour } = useTourGuide();
 
   // Track if current data is sample data shown for tour
@@ -56,6 +57,8 @@ export default function App() {
       // Update baseline after successful upload
       baselineGroupsRef.current = JSON.parse(JSON.stringify(loaded));
       setHasUnsavedChanges(false);
+      // Reset scroll position
+      setScrollResetKey(k => k + 1);
     } catch (err) {
       setError(`Nie udało się odczytać pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -94,6 +97,8 @@ export default function App() {
     // Update baseline after creating new file
     baselineGroupsRef.current = JSON.parse(JSON.stringify(newGroups));
     setHasUnsavedChanges(false);
+    // Reset scroll position
+    setScrollResetKey(k => k + 1);
   };
 
   const handleAddGroup = () => {
@@ -204,6 +209,7 @@ export default function App() {
           <PlayerTableMRT
             players={groups[activeGroupIndex].players}
             onUpdatePlayers={handleUpdatePlayers}
+            resetScrollKey={scrollResetKey}
           />
         </>
       )}
