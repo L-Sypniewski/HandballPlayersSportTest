@@ -137,7 +137,7 @@ export default function GroupTabs({
                 e.stopPropagation();
                 onRemoveGroup(index);
               }}
-              title="Remove group"
+              title="Usuń grupę"
             >
               ✕
             </button>
@@ -145,7 +145,7 @@ export default function GroupTabs({
         </div>
       ))}
       <button style={styles.addBtn} onClick={onAddGroup}>
-        + Add Group
+        + Dodaj grupę
       </button>
     </div>
   );

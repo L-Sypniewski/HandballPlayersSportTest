@@ -2,20 +2,20 @@ import ExcelJS from 'exceljs';
 import type { Group, Player } from './types';
 
 const COLUMNS = [
-  'First Name',
-  'Last Name',
-  '30m Sprint Time',
-  '30m Sprint Score',
-  'Medicine Ball Forward',
-  'Medicine Ball Backward',
-  'Medicine Ball Sum',
-  'Medicine Ball Score',
-  'Five-Jump Distance',
-  'Five-Jump Score',
-  'Hand Throw Distance',
-  'Hand Throw Score',
-  'Envelope Time',
-  'Envelope Score',
+  'Imię',
+  'Nazwisko',
+  'Czas Biegu 30m',
+  'Punkty Bieg 30m',
+  'Rzut Piłką Lek. Do Przodu',
+  'Rzut Piłką Lek. Do Tyłu',
+  'Suma Rzutów Piłką Lek.',
+  'Punkty Rzut Piłką Lek.',
+  'Dystans Pięcioskoku',
+  'Punkty Pięcioskok',
+  'Dystans Rzutu Ręcznego',
+  'Punkty Rzut Ręczny',
+  'Czas Testu Koperta',
+  'Punkty Test Koperta',
 ];
 
 const PLAYER_KEYS: (keyof Player)[] = [

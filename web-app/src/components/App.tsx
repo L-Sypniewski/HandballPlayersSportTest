@@ -54,7 +54,7 @@ const styles = {
   },
 };
 
-const DEFAULT_GROUPS: Group[] = [{ name: 'Group 1', players: [] }];
+const DEFAULT_GROUPS: Group[] = [{ name: 'Grupa 1', players: [] }];
 
 export default function App() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -68,12 +68,12 @@ export default function App() {
       setError(null);
       const loaded = await readExcelFile(file);
       if (loaded.length === 0) {
-        loaded.push({ name: 'Group 1', players: [] });
+        loaded.push({ name: 'Grupa 1', players: [] });
       }
       setGroups(loaded);
       setActiveGroupIndex(0);
     } catch (err) {
-      setError(`Failed to read file: ${err instanceof Error ? err.message : String(err)}`);
+      setError(`Nie udało się odczytać pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -82,10 +82,19 @@ export default function App() {
     try {
       setError(null);
       const blob = await writeExcelFile(groups);
-      const { saveAs } = await import('file-saver');
-      saveAs(blob, 'handball_test_data.xlsx');
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const timestamp = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear().toString().slice(-2)}-${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `dane_testowe_zawodnikow_${timestamp}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (err) {
-      setError(`Failed to create file: ${err instanceof Error ? err.message : String(err)}`);
+      setError(`Nie udało się utworzyć pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -96,7 +105,7 @@ export default function App() {
   };
 
   const handleAddGroup = () => {
-    const newName = `Group ${groups.length + 1}`;
+    const newName = `Grupa ${groups.length + 1}`;
     setGroups([...groups, { name: newName, players: [] }]);
     setActiveGroupIndex(groups.length);
   };
@@ -126,9 +135,9 @@ export default function App() {
         <a href="/punktacja" style={styles.scoringLink}>
           📊 Punktacja
         </a>
-        <h1 style={styles.title}>🤾 Handball Players Sport Test</h1>
+        <h1 style={styles.title}>🤾 Test Sprawności Fizycznej Piłkarzy Ręcznych</h1>
         <p style={styles.subtitle}>
-          Upload, create, and manage player test data
+          Prześlij, utwórz i zarządzaj danymi testowymi zawodników
         </p>
       </div>
 

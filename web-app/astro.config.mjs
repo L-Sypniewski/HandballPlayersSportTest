@@ -4,4 +4,7 @@ import react from '@astrojs/react';
 export default defineConfig({
   integrations: [react()],
   output: 'static',
+  server: {
+    port: 3456,
+  },
 });

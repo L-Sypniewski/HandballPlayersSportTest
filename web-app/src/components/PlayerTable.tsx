@@ -15,20 +15,20 @@ const FIELD_CONFIG: {
   maxLength?: number;
   width: string;
 }[] = [
-  { key: 'firstName', label: 'First Name', type: 'text', maxLength: 15, width: '100px' },
-  { key: 'lastName', label: 'Last Name', type: 'text', maxLength: 15, width: '100px' },
-  { key: 'sprint30m_time', label: '30m Time', type: 'number', width: '80px' },
-  { key: 'sprint30m_score', label: '30m Score', type: 'number', readOnly: true, width: '80px' },
-  { key: 'medicineBall_forward', label: 'MB Fwd', type: 'number', width: '75px' },
-  { key: 'medicineBall_backward', label: 'MB Bwd', type: 'number', width: '75px' },
-  { key: 'medicineBall_sum', label: 'MB Sum', type: 'number', readOnly: true, width: '75px' },
-  { key: 'medicineBall_score', label: 'MB Score', type: 'number', width: '80px' },
-  { key: 'fiveJump_distance', label: '5-Jump Dist', type: 'number', width: '85px' },
-  { key: 'fiveJump_score', label: '5-Jump Score', type: 'number', width: '85px' },
-  { key: 'handThrow_distance', label: 'Throw Dist', type: 'number', width: '85px' },
-  { key: 'handThrow_score', label: 'Throw Score', type: 'number', width: '85px' },
-  { key: 'envelope_time', label: 'Env Time', type: 'number', width: '80px' },
-  { key: 'envelope_score', label: 'Env Score', type: 'number', width: '80px' },
+  { key: 'firstName', label: 'Imię', type: 'text', maxLength: 15, width: '100px' },
+  { key: 'lastName', label: 'Nazwisko', type: 'text', maxLength: 15, width: '100px' },
+  { key: 'sprint30m_time', label: 'Czas 30m', type: 'number', width: '80px' },
+  { key: 'sprint30m_score', label: 'Wynik 30m', type: 'number', readOnly: true, width: '80px' },
+  { key: 'medicineBall_forward', label: 'Piłka lekarska\nprzód', type: 'number', width: '75px' },
+  { key: 'medicineBall_backward', label: 'Piłka lekarska\ntył', type: 'number', width: '75px' },
+  { key: 'medicineBall_sum', label: 'Piłka lekarska\nsuma', type: 'number', readOnly: true, width: '75px' },
+  { key: 'medicineBall_score', label: 'Wynik\npiłka lekarska', type: 'number', width: '80px' },
+  { key: 'fiveJump_distance', label: 'Pięcioskok\ndystans', type: 'number', width: '85px' },
+  { key: 'fiveJump_score', label: 'Wynik\npięcioskok', type: 'number', width: '85px' },
+  { key: 'handThrow_distance', label: 'Rzut ręczny\ndystans', type: 'number', width: '85px' },
+  { key: 'handThrow_score', label: 'Wynik\nrzut ręczny', type: 'number', width: '85px' },
+  { key: 'envelope_time', label: 'Czas\nkoperta', type: 'number', width: '80px' },
+  { key: 'envelope_score', label: 'Wynik\nkoperta', type: 'number', width: '80px' },
 ];
 
 const styles = {
@@ -51,9 +51,10 @@ const styles = {
     color: '#ffffff',
     fontWeight: 600 as const,
     textAlign: 'center' as const,
-    whiteSpace: 'nowrap' as const,
+    whiteSpace: 'pre-line' as const,
     fontSize: '12px',
     borderBottom: '2px solid #2c5282',
+    lineHeight: 1.3,
   },
   td: {
     padding: '4px',
@@ -172,7 +173,7 @@ export default function PlayerTable({
     <div style={styles.wrapper}>
       {players.length === 0 ? (
         <div style={styles.emptyMsg}>
-          No players yet. Click "Add Player" to get started.
+          Brak zawodników. Kliknij "Dodaj zawodnika", aby rozpocząć.
         </div>
       ) : (
         <table style={styles.table}>
@@ -184,7 +185,7 @@ export default function PlayerTable({
                   {field.label}
                 </th>
               ))}
-              <th style={styles.actionTh}>Del</th>
+              <th style={styles.actionTh}>Usuń</th>
             </tr>
           </thead>
           <tbody>
@@ -219,7 +220,7 @@ export default function PlayerTable({
                   <button
                     style={styles.removeBtn}
                     onClick={() => handleRemovePlayer(pIdx)}
-                    title="Remove player"
+                    title="Usuń zawodnika"
                   >
                     ✕
                   </button>
@@ -230,7 +231,7 @@ export default function PlayerTable({
         </table>
       )}
       <button style={styles.addBtn} onClick={handleAddPlayer}>
-        + Add Player
+        + Dodaj zawodnika
       </button>
     </div>
   );

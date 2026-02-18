@@ -78,13 +78,13 @@ export default function FileControls({
         style={{ ...styles.btn, ...styles.uploadBtn }}
         onClick={() => fileInputRef.current?.click()}
       >
-        📂 Upload XLSX
+        📂 Prześlij XLSX
       </button>
       <button
         style={{ ...styles.btn, ...styles.newBtn }}
         onClick={onNewFile}
       >
-        ✨ New File
+        ✨ Nowy plik
       </button>
       <button
         style={{
@@ -94,7 +94,7 @@ export default function FileControls({
         onClick={onDownload}
         disabled={!hasData}
       >
-        💾 Download XLSX
+        💾 Pobierz XLSX
       </button>
     </div>
   );
