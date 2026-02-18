@@ -5,8 +5,11 @@ interface FileControlsProps {
   onUpload: (file: File) => void;
   onDownload: () => void;
   onNewFile: () => void;
+  onSelectStoredFile: (fileId: string) => void;
   onStartTour: () => void;
   hasData: boolean;
+  savedFiles: Array<{ id: string; name: string }>;
+  currentFileId: string | null;
   hasUnsavedChanges: boolean;
   isTourActive?: boolean;
 }
@@ -15,8 +18,11 @@ export default function FileControls({
   onUpload,
   onDownload,
   onNewFile,
+  onSelectStoredFile,
   onStartTour,
   hasData,
+  savedFiles,
+  currentFileId,
   hasUnsavedChanges,
   isTourActive = false,
 }: FileControlsProps) {
@@ -56,6 +62,27 @@ export default function FileControls({
         >
           ✨ Nowy plik
         </button>
+        <div className={styles.fileSelector}>
+          <label htmlFor="saved-files-select" className={styles.fileSelectorLabel}>
+            📁 Aktywny plik
+          </label>
+          <select
+            id="saved-files-select"
+            className={styles.fileSelectorInput}
+            value={currentFileId ?? ''}
+            onChange={(e) => onSelectStoredFile(e.target.value)}
+          >
+            {savedFiles.length === 0 ? (
+              <option value="">Brak zapisanych plików</option>
+            ) : (
+              savedFiles.map((file) => (
+                <option key={file.id} value={file.id}>
+                  {file.name}
+                </option>
+              ))
+            )}
+          </select>
+        </div>
         <button
           id="download-btn"
           className={`${styles.btn} ${hasData ? styles.downloadBtn : styles.disabledBtn}`}
