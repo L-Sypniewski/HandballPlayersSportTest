@@ -1,17 +1,21 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { Group } from '../lib/types';
 import { SAMPLE_PLAYERS } from '../lib/types';
 import { readExcelFile, writeExcelFile } from '../lib/excel';
+import {
+  listFiles,
+  saveFile,
+  loadFile,
+  deleteFile,
+  createFile,
+  type SavedFileInfo,
+} from '../lib/storage';
 import FileControls from './FileControls';
+import FileManager from './FileManager';
 import GroupTabs from './GroupTabs';
 import PlayerTableMRT from './PlayerTableMRT';
 import TourGuide, { useTourGuide } from './TourGuide';
 import styles from './App.module.css';
-
-// Deep comparison helper for groups arrays
-const groupsAreEqual = (a: Group[], b: Group[]): boolean => {
-  return JSON.stringify(a) === JSON.stringify(b);
-};
 
 const DEFAULT_GROUPS: Group[] = [{ name: 'Grupa 1', players: [] }];
 
@@ -24,25 +28,44 @@ export default function App() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isTourActive, setIsTourActive] = useState(false);
-  const [scrollResetKey, setScrollResetKey] = useState(0); // Key to reset table scroll
+  const [scrollResetKey, setScrollResetKey] = useState(0);
   const { startTour } = useTourGuide();
+
+  // File management state
+  const [savedFiles, setSavedFiles] = useState<SavedFileInfo[]>(() => listFiles());
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const [activeFileName, setActiveFileName] = useState<string | null>(null);
 
   // Track if current data is sample data shown for tour
   const isShowingSampleDataRef = useRef(false);
 
-  // Store baseline for unsaved changes detection
-  const baselineGroupsRef = useRef<Group[] | null>(null);
+  // Debounce timer for auto-save
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasData = groups.length > 0;
 
-  // Check for changes whenever groups change
+  // Auto-save to localStorage when groups change
+  const autoSave = useCallback(() => {
+    if (!activeFileId || !activeFileName || isShowingSampleDataRef.current) return;
+    saveFile(activeFileId, activeFileName, groups);
+    setSavedFiles(listFiles());
+  }, [activeFileId, activeFileName, groups]);
+
   useEffect(() => {
-    if (baselineGroupsRef.current !== null) {
-      setHasUnsavedChanges(!groupsAreEqual(groups, baselineGroupsRef.current));
+    if (!activeFileId || isShowingSampleDataRef.current) return;
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
     }
-  }, [groups]);
+    autoSaveTimerRef.current = setTimeout(autoSave, 500);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [groups, autoSave, activeFileId]);
 
   const handleUpload = async (file: File) => {
     try {
@@ -52,13 +75,18 @@ export default function App() {
       if (loaded.length === 0) {
         loaded.push({ name: 'Grupa 1', players: [] });
       }
+
+      // Create a new file entry using the uploaded filename (without extension)
+      const baseName = file.name.replace(/\.xlsx$/i, '') || 'Przesłany plik';
+      const newId = createFile(baseName);
+      saveFile(newId, baseName, loaded);
+
+      setActiveFileId(newId);
+      setActiveFileName(baseName);
       setGroups(loaded);
       setActiveGroupIndex(0);
-      // Update baseline after successful upload
-      baselineGroupsRef.current = JSON.parse(JSON.stringify(loaded));
-      setHasUnsavedChanges(false);
-      // Reset scroll position
-      setScrollResetKey(k => k + 1);
+      setSavedFiles(listFiles());
+      setScrollResetKey((k) => k + 1);
     } catch (err) {
       setError(`Nie udało się odczytać pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -75,30 +103,60 @@ export default function App() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `dane_testowe_zawodnikow_${timestamp}.xlsx`;
+      const downloadName = activeFileName
+        ? `${activeFileName}_${timestamp}.xlsx`
+        : `dane_testowe_zawodnikow_${timestamp}.xlsx`;
+      link.download = downloadName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      // Update baseline after successful download
-      baselineGroupsRef.current = JSON.parse(JSON.stringify(groups));
-      setHasUnsavedChanges(false);
     } catch (err) {
       setError(`Nie udało się utworzyć pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
-  const handleNewFile = () => {
+  const handleNewFile = (name: string) => {
     isShowingSampleDataRef.current = false;
     const newGroups = [...DEFAULT_GROUPS.map((g) => ({ ...g, players: [...g.players] }))];
+
+    const newId = createFile(name);
+    saveFile(newId, name, newGroups);
+
+    setActiveFileId(newId);
+    setActiveFileName(name);
     setGroups(newGroups);
     setActiveGroupIndex(0);
     setError(null);
-    // Update baseline after creating new file
-    baselineGroupsRef.current = JSON.parse(JSON.stringify(newGroups));
-    setHasUnsavedChanges(false);
-    // Reset scroll position
-    setScrollResetKey(k => k + 1);
+    setSavedFiles(listFiles());
+    setScrollResetKey((k) => k + 1);
+  };
+
+  const handleSelectFile = (id: string) => {
+    const loaded = loadFile(id);
+    if (!loaded) {
+      setError('Nie udało się wczytać pliku z pamięci lokalnej.');
+      return;
+    }
+    isShowingSampleDataRef.current = false;
+    const fileInfo = savedFiles.find((f) => f.id === id);
+    setActiveFileId(id);
+    setActiveFileName(fileInfo?.name ?? null);
+    setGroups(loaded);
+    setActiveGroupIndex(0);
+    setError(null);
+    setScrollResetKey((k) => k + 1);
+  };
+
+  const handleDeleteFile = (id: string) => {
+    deleteFile(id);
+    setSavedFiles(listFiles());
+    if (activeFileId === id) {
+      setActiveFileId(null);
+      setActiveFileName(null);
+      setGroups([]);
+      setActiveGroupIndex(0);
+    }
   };
 
   const handleAddGroup = () => {
@@ -121,7 +179,6 @@ export default function App() {
   };
 
   const handleUpdatePlayers = (players: Group['players']) => {
-    // User modified data, so it's no longer just sample data
     isShowingSampleDataRef.current = false;
     const updated = [...groups];
     updated[activeGroupIndex] = { ...updated[activeGroupIndex], players };
@@ -130,7 +187,6 @@ export default function App() {
 
   const handleTourStart = () => {
     setIsTourActive(true);
-    // Only load sample data if there's no existing data
     if (groups.length === 0) {
       isShowingSampleDataRef.current = true;
       setGroups(createSampleGroups());
@@ -140,7 +196,6 @@ export default function App() {
 
   const handleTourEnd = () => {
     setIsTourActive(false);
-    // Clear sample data only if it wasn't modified by user
     if (isShowingSampleDataRef.current) {
       setGroups([]);
       setActiveGroupIndex(0);
@@ -148,7 +203,6 @@ export default function App() {
   };
 
   const handleStartTourClick = () => {
-    // For manual tour start, also load sample data if no data exists
     if (groups.length === 0) {
       isShowingSampleDataRef.current = true;
       setGroups(createSampleGroups());
@@ -156,14 +210,12 @@ export default function App() {
       setIsTourActive(true);
       startTour(() => {
         setIsTourActive(false);
-        // Clear sample data after tour ends
         if (isShowingSampleDataRef.current) {
           setGroups([]);
           setActiveGroupIndex(0);
         }
       });
     } else {
-      // User has data, just start tour without modifying data
       setIsTourActive(true);
       startTour(() => {
         setIsTourActive(false);
@@ -183,15 +235,24 @@ export default function App() {
         </p>
       </div>
 
-      <FileControls
+      <FileManager
+        files={savedFiles}
+        activeFileId={activeFileId}
+        onSelectFile={handleSelectFile}
+        onCreateFile={handleNewFile}
+        onDeleteFile={handleDeleteFile}
         onUpload={handleUpload}
-        onDownload={handleDownload}
-        onNewFile={handleNewFile}
-        onStartTour={handleStartTourClick}
-        hasData={hasData}
-        hasUnsavedChanges={hasUnsavedChanges}
-        isTourActive={isTourActive}
       />
+
+      {activeFileId && (
+        <FileControls
+          onDownload={handleDownload}
+          onStartTour={handleStartTourClick}
+          hasData={hasData}
+          activeFileName={activeFileName}
+          isTourActive={isTourActive}
+        />
+      )}
 
       {error && <div className={styles.error}>{error}</div>}
 

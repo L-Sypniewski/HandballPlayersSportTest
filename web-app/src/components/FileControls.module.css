@@ -89,6 +89,21 @@
   display: none;
 }
 
+/* File name badge */
+.fileNameBadge {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+.spacer {
+  flex: 1;
+}
+
 /* Unsaved changes indicator */
 .unsavedIndicator {
   display: flex;
