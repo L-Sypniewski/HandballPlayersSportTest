@@ -1,17 +1,21 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
+import { HotTable } from '@handsontable/react-wrapper';
+import { Box, Button } from '@mui/material';
+import { registerAllModules } from 'handsontable/registry';
 import type { Player } from '../lib/types';
 import { createEmptyPlayer } from '../lib/types';
 import { calculateSprint30mScore, calculateMedicineBallScore, calculateFiveJumpScore } from '../lib/scoring';
+import 'handsontable/styles/handsontable.css';
+import 'handsontable/styles/ht-theme-main.css';
+
+registerAllModules();
 
 interface PlayerTableProps {
   players: Player[];
   onUpdatePlayers: (players: Player[]) => void;
-  resetScrollKey?: number | string; // Change this to reset scroll position
+  resetScrollKey?: number | string;
 }
 
-// Validation rules for numeric fields
 const VALIDATION_RULES: Record<string, { min: number; max: number; message: string }> = {
   sprint30m_time: { min: 0.1, max: 99.99, message: 'Czas 30m: 0.1 - 99.99 s' },
   medicineBall_forward: { min: 0, max: 30, message: 'Lekarska (przód): 0 - 30 m' },
@@ -23,36 +27,41 @@ const VALIDATION_RULES: Record<string, { min: number; max: number; message: stri
   envelope_score: { min: 0, max: 80, message: 'Wynik: 0 - 80 pkt' },
 };
 
-// Placeholders for editable fields
-const PLACEHOLDERS: Record<string, string> = {
-  firstName: 'Wymagane',
-  lastName: 'Wymagane',
-  sprint30m_time: 'np. 4.50',
-  medicineBall_forward: 'np. 10.5',
-  medicineBall_backward: 'np. 12.0',
-  fiveJump_distance: 'np. 11.25',
-  handThrow_distance: 'np. 35.0',
-  handThrow_score: '0 - 80',
-  envelope_time: 'np. 15.5',
-  envelope_score: '0 - 80',
-};
+const EDITABLE_FIELDS: Array<keyof Player> = [
+  'firstName',
+  'lastName',
+  'sprint30m_time',
+  'medicineBall_forward',
+  'medicineBall_backward',
+  'fiveJump_distance',
+  'handThrow_distance',
+  'handThrow_score',
+  'envelope_time',
+  'envelope_score',
+];
 
-type PlayerWithRowNumber = Player & { rowNumber: number };
+const NUMBER_FIELDS = new Set<keyof Player>([
+  'sprint30m_time',
+  'medicineBall_forward',
+  'medicineBall_backward',
+  'fiveJump_distance',
+  'handThrow_distance',
+  'handThrow_score',
+  'envelope_time',
+  'envelope_score',
+]);
 
 export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKey }: PlayerTableProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Reset scroll to left when resetScrollKey changes
   useEffect(() => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollLeft = 0;
+    const holder = tableContainerRef.current?.querySelector<HTMLElement>('.wtHolder');
+    if (holder) {
+      holder.scrollLeft = 0;
     }
   }, [resetScrollKey]);
 
-  // Check if a player row is valid (has required fields)
   const isPlayerValid = (player: Player): boolean => {
     const hasValidFirstName = player.firstName.trim().length > 0;
     const hasValidLastName = player.lastName.trim().length > 0;
@@ -60,10 +69,9 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
   };
 
   const handleAddPlayer = () => {
-    // Check if all existing players are valid before adding a new one
-    const invalidPlayerIndex = players.findIndex(p => !isPlayerValid(p));
+    const invalidPlayerIndex = players.findIndex((p) => !isPlayerValid(p));
     if (invalidPlayerIndex !== -1) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
         [`${invalidPlayerIndex}-firstName`]: players[invalidPlayerIndex].firstName.trim() === '' ? 'Imię jest wymagane' : '',
         [`${invalidPlayerIndex}-lastName`]: players[invalidPlayerIndex].lastName.trim() === '' ? 'Nazwisko jest wymagane' : '',
@@ -73,362 +81,152 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
     onUpdatePlayers([...players, createEmptyPlayer()]);
   };
 
-  const handleDeleteClick = (rowIndex: number) => {
-    setPlayerToDelete(rowIndex);
-    setDeleteDialogOpen(true);
-  };
+  const handleAfterChange = (changes: [number, string | number, unknown, unknown][] | null, source: string) => {
+    if (!changes || source === 'loadData') return;
 
-  const handleDeleteConfirm = () => {
-    if (playerToDelete !== null) {
-      onUpdatePlayers(players.filter((_, i) => i !== playerToDelete));
-    }
-    setDeleteDialogOpen(false);
-    setPlayerToDelete(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setPlayerToDelete(null);
-  };
-
-  const handleCellValueChange = (rowIndex: number, key: keyof Player, value: unknown) => {
     const updated = [...players];
-    const player = { ...updated[rowIndex] };
-    const inputKey = `${rowIndex}-${key}`;
+    let hasChanges = false;
 
-    if (key === 'firstName' || key === 'lastName') {
-      const strValue = (value as string).slice(0, 15);
-      player[key] = strValue;
+    for (const [rowIndex, prop, , newValue] of changes) {
+      if (typeof prop !== 'string' || rowIndex < 0 || rowIndex >= updated.length) continue;
+      if (!EDITABLE_FIELDS.includes(prop as keyof Player)) continue;
 
-      // Validate: not whitespace-only
-      if (strValue.trim() === '') {
-        setValidationErrors(prev => ({ ...prev, [inputKey]: key === 'firstName' ? 'Imię jest wymagane' : 'Nazwisko jest wymagane' }));
-      } else {
-        setValidationErrors(prev => {
-          const next = { ...prev };
-          delete next[inputKey];
-          return next;
-        });
-      }
-    } else {
-      const strValue = String(value || '').trim();
-      if (strValue === '') {
-        (player as Record<string, unknown>)[key] = null;
-        setValidationErrors(prev => {
-          const next = { ...prev };
-          delete next[inputKey];
-          return next;
-        });
-      } else {
-        const numVal = Number(strValue);
-        if (isNaN(numVal)) {
-          setValidationErrors(prev => ({ ...prev, [inputKey]: 'Wymagana liczba' }));
-          return;
-        }
-        (player as Record<string, unknown>)[key] = numVal;
+      const player = { ...updated[rowIndex] };
+      const key = prop as keyof Player;
+      const inputKey = `${rowIndex}-${key}`;
 
-        const rule = VALIDATION_RULES[key];
-        if (rule && (numVal < rule.min || numVal > rule.max)) {
-          setValidationErrors(prev => ({ ...prev, [inputKey]: rule.message }));
+      if (key === 'firstName' || key === 'lastName') {
+        const strValue = String(newValue ?? '').slice(0, 15);
+        player[key] = strValue;
+        if (strValue.trim() === '') {
+          setValidationErrors((prev) => ({ ...prev, [inputKey]: key === 'firstName' ? 'Imię jest wymagane' : 'Nazwisko jest wymagane' }));
         } else {
-          setValidationErrors(prev => {
+          setValidationErrors((prev) => {
             const next = { ...prev };
             delete next[inputKey];
             return next;
           });
         }
+      } else if (NUMBER_FIELDS.has(key)) {
+        const strValue = String(newValue ?? '').trim();
+        if (strValue === '') {
+          (player as Record<string, unknown>)[key] = null;
+          setValidationErrors((prev) => {
+            const next = { ...prev };
+            delete next[inputKey];
+            return next;
+          });
+        } else {
+          const numVal = Number(strValue);
+          if (Number.isNaN(numVal)) {
+            setValidationErrors((prev) => ({ ...prev, [inputKey]: 'Wymagana liczba' }));
+            continue;
+          }
+
+          (player as Record<string, unknown>)[key] = numVal;
+
+          const rule = VALIDATION_RULES[key];
+          if (rule && (numVal < rule.min || numVal > rule.max)) {
+            setValidationErrors((prev) => ({ ...prev, [inputKey]: rule.message }));
+          } else {
+            setValidationErrors((prev) => {
+              const next = { ...prev };
+              delete next[inputKey];
+              return next;
+            });
+          }
+        }
       }
+
+      if (key === 'sprint30m_time' && player.sprint30m_time !== null) {
+        player.sprint30m_score = calculateSprint30mScore(player.sprint30m_time);
+      }
+
+      if (key === 'medicineBall_forward' || key === 'medicineBall_backward') {
+        const fwd = player.medicineBall_forward;
+        const bwd = player.medicineBall_backward;
+        player.medicineBall_sum = fwd !== null && bwd !== null ? fwd + bwd : null;
+        player.medicineBall_score = player.medicineBall_sum !== null ? calculateMedicineBallScore(player.medicineBall_sum) : null;
+      }
+
+      if (key === 'fiveJump_distance' && player.fiveJump_distance !== null) {
+        player.fiveJump_score = calculateFiveJumpScore(player.fiveJump_distance);
+      }
+
+      updated[rowIndex] = player;
+      hasChanges = true;
     }
 
-    // Auto-calculate sprint30m_score
-    if (key === 'sprint30m_time' && player.sprint30m_time !== null) {
-      player.sprint30m_score = calculateSprint30mScore(player.sprint30m_time);
+    if (hasChanges) {
+      onUpdatePlayers(updated);
     }
+  };
 
-    // Auto-calculate medicineBall_sum and medicineBall_score
-    if (key === 'medicineBall_forward' || key === 'medicineBall_backward') {
-      const fwd = player.medicineBall_forward;
-      const bwd = player.medicineBall_backward;
-      player.medicineBall_sum = fwd !== null && bwd !== null ? fwd + bwd : null;
-      player.medicineBall_score = player.medicineBall_sum !== null ? calculateMedicineBallScore(player.medicineBall_sum) : null;
-    }
-
-    // Auto-calculate fiveJump_score
-    if (key === 'fiveJump_distance' && player.fiveJump_distance !== null) {
-      player.fiveJump_score = calculateFiveJumpScore(player.fiveJump_distance);
-    }
-
-    updated[rowIndex] = player;
+  const handleAfterRemoveRow = (index: number, amount: number) => {
+    if (amount <= 0) return;
+    const updated = [...players];
+    updated.splice(index, amount);
     onUpdatePlayers(updated);
   };
 
-  const columns = useMemo<MRT_ColumnDef<PlayerWithRowNumber>[]>(
-    () => [
-      { accessorKey: 'rowNumber', header: '#', size: 50, enableEditing: false },
-      { accessorKey: 'firstName', header: 'Imię', size: 100 },
-      { accessorKey: 'lastName', header: 'Nazwisko', size: 100 },
-      { accessorKey: 'sprint30m_time', header: 'Czas 30m', size: 80 },
-      { accessorKey: 'sprint30m_score', header: 'Wynik 30m', size: 80, enableEditing: false },
-      { accessorKey: 'medicineBall_forward', header: 'Lekarska przód', size: 100 },
-      { accessorKey: 'medicineBall_backward', header: 'Lekarska tył', size: 100 },
-      { accessorKey: 'medicineBall_sum', header: 'Lekarska suma', size: 100, enableEditing: false },
-      { accessorKey: 'medicineBall_score', header: 'Wynik Lekarska', size: 100, enableEditing: false },
-      { accessorKey: 'fiveJump_distance', header: 'Pięcioskok dystans', size: 100 },
-      { accessorKey: 'fiveJump_score', header: 'Wynik pięcioskok', size: 100, enableEditing: false },
-      { accessorKey: 'handThrow_distance', header: 'Rzut ręczny dystans', size: 100 },
-      { accessorKey: 'handThrow_score', header: 'Wynik rzut ręczny', size: 100 },
-      { accessorKey: 'envelope_time', header: 'Czas koperta', size: 80 },
-      { accessorKey: 'envelope_score', header: 'Wynik koperta', size: 80 },
-    ],
-    []
-  );
-
-  const tableData = useMemo<PlayerWithRowNumber[]>(
+  const tableData = useMemo(
     () => players.map((player, index) => ({ ...player, rowNumber: index + 1 })),
     [players]
   );
 
   return (
     <Box id="player-table-mrt" sx={{ width: '100%', mt: 1.5, bgcolor: '#fff', borderRadius: 1, boxShadow: 1, p: 2 }}>
-      <MaterialReactTable
-        columns={columns}
-        data={tableData}
-        enableEditing={true}
-        editDisplayMode="cell"
-        enableRowActions={true}
-        positionActionsColumn="last"
-        renderRowActions={({ row }) => (
-          <Button color="error" size="small" onClick={() => handleDeleteClick(row.index)}>
-            Usuń
-          </Button>
-        )}
-        muiEditTextFieldProps={({ cell, column }) => {
-          const colId = column.columnDef.id || '';
-          const inputKey = `${cell.row.index}-${colId}`;
-          const hasError = !!validationErrors[inputKey];
-          return {
-            placeholder: PLACEHOLDERS[colId] || '',
-            onBlur: (event: React.FocusEvent<HTMLInputElement>) => {
-              if (colId !== 'rowNumber') {
-                handleCellValueChange(cell.row.index, colId as keyof Player, event.target.value);
-              }
-            },
-            error: hasError,
-            helperText: hasError ? validationErrors[inputKey] : undefined,
-            sx: {
-              '& .MuiInputBase-input': {
-                fontSize: '13px',
-                padding: '6px 8px',
-              },
-              '& .MuiFormHelperText-root': {
-                fontSize: '10px',
-                marginLeft: 0,
-                marginTop: '2px',
-              },
-            },
-          };
-        }}
-        muiTableContainerProps={{
-          ref: tableContainerRef,
-          sx: { maxHeight: '600px' },
-        }}
-        muiTableHeadCellProps={({ column }) => {
-          const colId = column.columnDef.id;
-          // Color groups for related columns
-          const groupColors: Record<string, string> = {
-            // Player info (pinned) - darker blue
-            rowNumber: '#1a365d',
-            firstName: '#1a365d',
-            lastName: '#1a365d',
-            // Sprint - teal
-            sprint30m_time: '#2c7a7b',
-            sprint30m_score: '#2c7a7b',
-            // Medicine ball - purple
-            medicineBall_forward: '#6b46c1',
-            medicineBall_backward: '#6b46c1',
-            medicineBall_sum: '#6b46c1',
-            medicineBall_score: '#6b46c1',
-            // Five-jump - orange
-            fiveJump_distance: '#c05621',
-            fiveJump_score: '#c05621',
-            // Hand throw - green
-            handThrow_distance: '#276749',
-            handThrow_score: '#276749',
-            // Envelope - red
-            envelope_time: '#c53030',
-            envelope_score: '#c53030',
-          };
-          return {
-            id: colId,
-            sx: {
-              backgroundColor: groupColors[colId] || '#2b6cb0',
-              color: '#ffffff',
-              fontWeight: 600,
-              fontSize: '12px',
-              padding: '10px 6px',
-              textAlign: 'center',
-              borderBottom: `2px solid ${groupColors[colId] || '#2c5282'}`,
-              boxShadow: column.getIsPinned() ? '2px 0 4px rgba(0,0,0,0.2)' : 'none',
-              '& .MuiBadge-root, & .MuiIconButton-root, & svg': {
-                color: '#ffffff !important',
-              },
-              '& button': {
-                color: '#ffffff !important',
-              },
-            },
-          };
-        }}
-        muiColumnActionsButtonProps={{
-          sx: {
-            color: '#ffffff !important',
-            opacity: 1,
-            '&:hover': { color: '#e2e8f0 !important', opacity: 0.9 },
-            '& svg': { color: '#ffffff !important' },
-          },
-        }}
-        muiTableBodyRowProps={({ row }) => ({
-          sx: {
-            backgroundColor: row.index % 2 === 0 ? '#ffffff' : '#f7fafc',
-          },
-        })}
-        muiTableBodyCellProps={({ cell, column }) => {
-          const isEditable = column.columnDef.enableEditing !== false;
-          const isPinned = column.getIsPinned();
-          const colId = column.columnDef.id || '';
-          const inputKey = `${cell.row.index}-${colId}`;
-          const hasError = !!validationErrors[inputKey];
-          const value = cell.getValue();
-          // Show placeholder styling if empty and required (firstName, lastName)
-          const isEmptyRequired = (colId === 'firstName' || colId === 'lastName') && (!value || String(value).trim() === '');
+      <div ref={tableContainerRef}>
+        <HotTable
+          data={tableData}
+          columns={[
+            { data: 'rowNumber', readOnly: true },
+            { data: 'firstName' },
+            { data: 'lastName' },
+            { data: 'sprint30m_time', type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'sprint30m_score', readOnly: true },
+            { data: 'medicineBall_forward', type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'medicineBall_backward', type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'medicineBall_sum', readOnly: true, type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'medicineBall_score', readOnly: true },
+            { data: 'fiveJump_distance', type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'fiveJump_score', readOnly: true },
+            { data: 'handThrow_distance', type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'handThrow_score', type: 'numeric' },
+            { data: 'envelope_time', type: 'numeric', numericFormat: { pattern: '0.00' } },
+            { data: 'envelope_score', type: 'numeric' },
+          ]}
+          colHeaders={[
+            '#',
+            'Imię',
+            'Nazwisko',
+            'Czas 30m',
+            'Wynik 30m',
+            'Lekarska przód',
+            'Lekarska tył',
+            'Lekarska suma',
+            'Wynik Lekarska',
+            'Pięcioskok dystans',
+            'Wynik pięcioskok',
+            'Rzut ręczny dystans',
+            'Wynik rzut ręczny',
+            'Czas koperta',
+            'Wynik koperta',
+          ]}
+          width="100%"
+          height={600}
+          rowHeaders={true}
+          stretchH="all"
+          autoWrapRow={true}
+          autoWrapCol={true}
+          manualColumnResize={true}
+          contextMenu={['remove_row']}
+          licenseKey="non-commercial-and-evaluation"
+          afterChange={handleAfterChange}
+          afterRemoveRow={handleAfterRemoveRow}
+        />
+      </div>
 
-          return {
-            sx: {
-              fontSize: '13px',
-              padding: '4px',
-              textAlign: 'center',
-              borderBottom: hasError ? '2px solid #e53e3e' : '1px solid #e2e8f0',
-              // Read-only cells: gray background
-              backgroundColor: !isEditable ? '#f0f4f8' : hasError ? '#fff5f5' : 'inherit',
-              // Editable cells: cursor pointer + light hover + subtle border
-              cursor: isEditable ? 'pointer' : 'default',
-              borderRight: isEditable ? '1px solid #e2e8f0' : 'none',
-              '&:hover': isEditable ? { backgroundColor: hasError ? '#fed7d7' : '#edf2f7' } : {},
-              // Pinned cells: ensure sticky background matches row
-              ...(isPinned && { backgroundColor: cell.row.index % 2 === 0 ? '#fff' : '#f7fafc' }),
-              // Empty required cells: italic placeholder look
-              ...(isEmptyRequired && {
-                color: '#a0aec0',
-                fontStyle: 'italic',
-                '&::after': { content: '"Wymagane"' },
-              }),
-            },
-          };
-        }}
-        muiBottomToolbarProps={{
-          sx: { display: 'none' },
-        }}
-        muiTopToolbarProps={{
-          sx: { display: 'none' },
-        }}
-        initialState={{
-          columnPinning: { left: ['rowNumber', 'firstName', 'lastName'] },
-        }}
-        state={{ columnPinning: { left: ['rowNumber', 'firstName', 'lastName'] } }}
-        localization={{
-          language: 'pl',
-          actions: 'Akcje',
-          noRecordsToDisplay: 'Brak zawodników. Kliknij "Dodaj zawodnika", aby rozpocząć.',
-          noResultsFound: 'Brak wyników do wyświetlenia',
-          cancel: 'Anuluj',
-          clearFilter: 'Wyczyść filtr',
-          clearSearch: 'Wyczyść wyszukiwanie',
-          clearSelection: 'Wyczyść zaznaczenie',
-          clearSort: 'Wyczyść sortowanie',
-          clickToCopy: 'Kliknij, aby skopiować',
-          collapse: 'Zwiń',
-          collapseAll: 'Zwiń wszystkie',
-          columnActions: 'Akcje kolumny',
-          copiedToClipboard: 'Skopiowano do schowka',
-          copy: 'Kopiuj',
-          dropToGroupBy: 'Upuść, aby grupować po {column}',
-          edit: 'Edytuj',
-          expand: 'Rozwiń',
-          expandAll: 'Rozwiń wszystkie',
-          filterArrIncludes: 'Zawiera',
-          filterArrIncludesAll: 'Zawiera wszystkie',
-          filterArrIncludesSome: 'Zawiera niektóre',
-          filterBetween: 'Między',
-          filterBetweenInclusive: 'Między (włącznie)',
-          filterByColumn: 'Filtruj według {column}',
-          filterContains: 'Zawiera',
-          filterEmpty: 'Puste',
-          filterEndsWith: 'Kończy się na',
-          filterEquals: 'Równe',
-          filterEqualsString: 'Równe',
-          filterFuzzy: 'Rozmyte',
-          filterGreaterThan: 'Większe niż',
-          filterGreaterThanOrEqualTo: 'Większe lub równe',
-          filterInNumberRange: 'W zakresie',
-          filterIncludesString: 'Zawiera',
-          filterIncludesStringSensitive: 'Zawiera (uwzględniając wielkość liter)',
-          filterLessThan: 'Mniejsze niż',
-          filterLessThanOrEqualTo: 'Mniejsze lub równe',
-          filterMode: 'Tryb filtrowania',
-          filterNotEmpty: 'Nie puste',
-          filterNotEquals: 'Nie równe',
-          filterStartsWith: 'Zaczyna się od',
-          filterWeakEquals: 'W przybliżeniu równe',
-          filteringByColumn: 'Filtrowanie według {column}',
-          goToFirstPage: 'Przejdź do pierwszej strony',
-          goToLastPage: 'Przejdź do ostatniej strony',
-          goToNextPage: 'Przejdź do następnej strony',
-          goToPreviousPage: 'Przejdź do poprzedniej strony',
-          grab: 'Chwyć',
-          groupByColumn: 'Grupuj według {column}',
-          groupedBy: 'Grupowane według',
-          hideAll: 'Ukryj wszystkie',
-          hideColumn: 'Ukryj kolumnę {column}',
-          max: 'Max',
-          min: 'Min',
-          move: 'Przenieś',
-          of: 'z',
-          or: 'lub',
-          pin: 'Przypnij',
-          pinToLeft: 'Przypnij do lewej',
-          pinToRight: 'Przypnij do prawej',
-          resetColumnSize: 'Resetuj rozmiar kolumny',
-          resetOrder: 'Resetuj kolejność',
-          rowActions: 'Akcje wiersza',
-          rowNumber: '#{row}',
-          rowNumbers: 'Numery wierszy',
-          rowsPerPage: 'Wierszy na stronę',
-          save: 'Zapisz',
-          search: 'Szukaj',
-          selectedCountOfRowCountRowsSelected: 'Wybrano {selectedCount} z {rowCount} wierszy',
-          select: 'Wybierz',
-          showAll: 'Pokaż wszystkie',
-          showAllColumns: 'Pokaż wszystkie kolumny',
-          showHideColumns: 'Pokaż/ukryj kolumny',
-          showHideFilters: 'Pokaż/ukryj filtry',
-          showHideSearch: 'Pokaż/ukryj wyszukiwanie',
-          sortByColumnAsc: 'Sortuj według {column} rosnąco',
-          sortByColumnDesc: 'Sortuj według {column} malejąco',
-          sortedByColumnAsc: 'Posortowano według {column} rosnąco',
-          sortedByColumnDesc: 'Posortowano według {column} malejąco',
-          thenBy: 'następnie według',
-          toggleDensity: 'Przełącz gęstość',
-          toggleFullScreen: 'Przełącz pełny ekran',
-          toggleSelectAll: 'Zaznacz/odznacz wszystko',
-          toggleSelectRow: 'Zaznacz/odznacz wiersz',
-          toggleVisibility: 'Przełącz widoczność',
-          ungroupByColumn: 'Rozgrupuj według {column}',
-          unpin: 'Odepnij',
-          unpinAll: 'Odepnij wszystkie',
-          and: 'i',
-          changeFilterMode: 'Zmień tryb filtrowania',
-          changeSearchMode: 'Zmień tryb wyszukiwania',
-        }}
-      />
       <Button
         id="add-player-btn"
         variant="outlined"
@@ -450,27 +248,9 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
       >
         + Dodaj zawodnika
       </Button>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Potwierdź usunięcie</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Czy na pewno chcesz usunąć tego zawodnika?
-            {playerToDelete !== null && players[playerToDelete] && (
-              <><br /><strong>{players[playerToDelete].firstName} {players[playerToDelete].lastName}</strong></>
-            )}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="primary">
-            Anuluj
-          </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Usuń
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {Object.keys(validationErrors).length > 0 && (
+        <Box sx={{ mt: 1, color: '#c53030', fontSize: '12px' }}>Popraw błędy walidacji przed dodaniem kolejnego zawodnika.</Box>
+      )}
     </Box>
   );
 }
