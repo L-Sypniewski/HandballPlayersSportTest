@@ -105,7 +105,7 @@ export default function GroupTabs({
   };
 
   return (
-    <div style={styles.container}>
+    <div id="group-tabs" style={styles.container}>
       {groups.map((group, index) => (
         <div
           key={index}
@@ -144,7 +144,7 @@ export default function GroupTabs({
           )}
         </div>
       ))}
-      <button style={styles.addBtn} onClick={onAddGroup}>
+      <button id="add-group-btn" style={styles.addBtn} onClick={onAddGroup}>
         + Dodaj grupę
       </button>
     </div>

@@ -170,7 +170,7 @@ export default function PlayerTable({
   };
 
   return (
-    <div style={styles.wrapper}>
+    <div id="player-table" style={styles.wrapper}>
       {players.length === 0 ? (
         <div style={styles.emptyMsg}>
           Brak zawodników. Kliknij "Dodaj zawodnika", aby rozpocząć.
@@ -230,7 +230,7 @@ export default function PlayerTable({
           </tbody>
         </table>
       )}
-      <button style={styles.addBtn} onClick={handleAddPlayer}>
+      <button id="add-player-btn" style={styles.addBtn} onClick={handleAddPlayer}>
         + Dodaj zawodnika
       </button>
     </div>

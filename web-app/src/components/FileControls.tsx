@@ -66,7 +66,7 @@ export default function FileControls({
   };
 
   return (
-    <div style={styles.container}>
+    <div id="file-controls" style={styles.container}>
       <input
         ref={fileInputRef}
         type="file"
@@ -75,18 +75,21 @@ export default function FileControls({
         style={styles.hiddenInput}
       />
       <button
+        id="upload-btn"
         style={{ ...styles.btn, ...styles.uploadBtn }}
         onClick={() => fileInputRef.current?.click()}
       >
         📂 Prześlij XLSX
       </button>
       <button
+        id="new-file-btn"
         style={{ ...styles.btn, ...styles.newBtn }}
         onClick={onNewFile}
       >
         ✨ Nowy plik
       </button>
       <button
+        id="download-btn"
         style={{
           ...styles.btn,
           ...(hasData ? styles.downloadBtn : styles.disabledBtn),

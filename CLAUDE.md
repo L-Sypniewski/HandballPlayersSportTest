@@ -29,7 +29,7 @@ npm run preview  # Preview production build
 
 ### Web Application (`web-app/`)
 - **Framework**: Astro 5.x with React 19 integration, static output
-- **Key Dependencies**: ExcelJS (Excel file handling), file-saver
+- **Key Dependencies**: ExcelJS (Excel file handling), driver.js (product tour)
 
 #### Source Structure
 ```
@@ -38,7 +38,8 @@ web-app/src/
 │   ├── App.tsx       # Main app container with state management
 │   ├── FileControls.tsx  # Upload/download/new file buttons
 │   ├── GroupTabs.tsx     # Tab system for multiple groups
-│   └── PlayerTable.tsx   # Editable player data table
+│   ├── PlayerTable.tsx   # Editable player data table
+│   └── TourGuide.tsx     # Product tour using driver.js
 ├── lib/
 │   ├── types.ts      # Player and Group TypeScript interfaces
 │   ├── scoring.ts    # Score calculation functions
@@ -67,6 +68,14 @@ Each Excel sheet becomes a `Group` with its own `players` array.
 - **30m Sprint score**: Auto-calculated via `calculateSprint30mScore()` in `scoring.ts`
 - **Medicine Ball sum**: Auto-calculated (forward + backward)
 - **All other scores**: Manually entered (no scoring functions implemented yet)
+
+#### Product Tour
+The app includes an interactive product tour using **driver.js**:
+- **Auto-starts** for first-time users (checks `localStorage` for `handball-tour-completed`)
+- **Help button** ("❓ Pomoc") in header to restart the tour
+- **13 steps** covering: file controls, group tabs, player table, auto-calculations, scoring link
+- **Polish UI text**: "Dalej", "Wstecz", "Gotowe", "Krok X z Y"
+- Tour state persisted in localStorage
 
 ## Scoring Logic
 
