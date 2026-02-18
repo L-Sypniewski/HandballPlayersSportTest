@@ -10,7 +10,7 @@ interface PlayerTableProps {
   onUpdatePlayers: (players: Player[]) => void;
 }
 
-// Validation rules
+// Validation rules for numeric fields
 const VALIDATION_RULES: Record<string, { min: number; max: number; message: string }> = {
   sprint30m_time: { min: 0.1, max: 99.99, message: 'Czas 30m: 0.1 - 99.99 s' },
   medicineBall_forward: { min: 0, max: 30, message: 'Lekarska (przód): 0 - 30 m' },
@@ -22,6 +22,20 @@ const VALIDATION_RULES: Record<string, { min: number; max: number; message: stri
   envelope_score: { min: 0, max: 80, message: 'Wynik: 0 - 80 pkt' },
 };
 
+// Placeholders for editable fields
+const PLACEHOLDERS: Record<string, string> = {
+  firstName: 'Wymagane',
+  lastName: 'Wymagane',
+  sprint30m_time: 'np. 4.50',
+  medicineBall_forward: 'np. 10.5',
+  medicineBall_backward: 'np. 12.0',
+  fiveJump_distance: 'np. 11.25',
+  handThrow_distance: 'np. 35.0',
+  handThrow_score: '0 - 80',
+  envelope_time: 'np. 15.5',
+  envelope_score: '0 - 80',
+};
+
 type PlayerWithRowNumber = Player & { rowNumber: number };
 
 export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTableProps) {
@@ -29,7 +43,24 @@ export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTable
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
 
+  // Check if a player row is valid (has required fields)
+  const isPlayerValid = (player: Player): boolean => {
+    const hasValidFirstName = player.firstName.trim().length > 0;
+    const hasValidLastName = player.lastName.trim().length > 0;
+    return hasValidFirstName && hasValidLastName;
+  };
+
   const handleAddPlayer = () => {
+    // Check if all existing players are valid before adding a new one
+    const invalidPlayerIndex = players.findIndex(p => !isPlayerValid(p));
+    if (invalidPlayerIndex !== -1) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [`${invalidPlayerIndex}-firstName`]: players[invalidPlayerIndex].firstName.trim() === '' ? 'Imię jest wymagane' : '',
+        [`${invalidPlayerIndex}-lastName`]: players[invalidPlayerIndex].lastName.trim() === '' ? 'Nazwisko jest wymagane' : '',
+      }));
+      return;
+    }
     onUpdatePlayers([...players, createEmptyPlayer()]);
   };
 
@@ -57,7 +88,19 @@ export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTable
     const inputKey = `${rowIndex}-${key}`;
 
     if (key === 'firstName' || key === 'lastName') {
-      player[key] = (value as string).slice(0, 15);
+      const strValue = (value as string).slice(0, 15);
+      player[key] = strValue;
+
+      // Validate: not whitespace-only
+      if (strValue.trim() === '') {
+        setValidationErrors(prev => ({ ...prev, [inputKey]: key === 'firstName' ? 'Imię jest wymagane' : 'Nazwisko jest wymagane' }));
+      } else {
+        setValidationErrors(prev => {
+          const next = { ...prev };
+          delete next[inputKey];
+          return next;
+        });
+      }
     } else {
       const strValue = String(value || '').trim();
       if (strValue === '') {
@@ -150,14 +193,32 @@ export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTable
             Usuń
           </Button>
         )}
-        muiEditTextFieldProps={({ cell }) => ({
-          onBlur: (event) => {
-            const key = cell.column.id;
-            if (key !== 'rowNumber') {
-              handleCellValueChange(cell.row.index, key as keyof Player, event.target.value);
-            }
-          },
-        })}
+        muiEditTextFieldProps={({ cell, column }) => {
+          const colId = column.columnDef.id || '';
+          const inputKey = `${cell.row.index}-${colId}`;
+          const hasError = !!validationErrors[inputKey];
+          return {
+            placeholder: PLACEHOLDERS[colId] || '',
+            onBlur: (event: React.FocusEvent<HTMLInputElement>) => {
+              if (colId !== 'rowNumber') {
+                handleCellValueChange(cell.row.index, colId as keyof Player, event.target.value);
+              }
+            },
+            error: hasError,
+            helperText: hasError ? validationErrors[inputKey] : undefined,
+            sx: {
+              '& .MuiInputBase-input': {
+                fontSize: '13px',
+                padding: '6px 8px',
+              },
+              '& .MuiFormHelperText-root': {
+                fontSize: '10px',
+                marginLeft: 0,
+                marginTop: '2px',
+              },
+            },
+          };
+        }}
         muiTableContainerProps={{
           sx: { maxHeight: '600px' },
         }}
@@ -223,20 +284,33 @@ export default function PlayerTableMRT({ players, onUpdatePlayers }: PlayerTable
         muiTableBodyCellProps={({ cell, column }) => {
           const isEditable = column.columnDef.enableEditing !== false;
           const isPinned = column.getIsPinned();
+          const colId = column.columnDef.id || '';
+          const inputKey = `${cell.row.index}-${colId}`;
+          const hasError = !!validationErrors[inputKey];
+          const value = cell.getValue();
+          // Show placeholder styling if empty and required (firstName, lastName)
+          const isEmptyRequired = (colId === 'firstName' || colId === 'lastName') && (!value || String(value).trim() === '');
+
           return {
             sx: {
               fontSize: '13px',
               padding: '4px',
               textAlign: 'center',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: hasError ? '2px solid #e53e3e' : '1px solid #e2e8f0',
               // Read-only cells: gray background
-              backgroundColor: !isEditable ? '#f0f4f8' : 'inherit',
+              backgroundColor: !isEditable ? '#f0f4f8' : hasError ? '#fff5f5' : 'inherit',
               // Editable cells: cursor pointer + light hover + subtle border
               cursor: isEditable ? 'pointer' : 'default',
               borderRight: isEditable ? '1px solid #e2e8f0' : 'none',
-              '&:hover': isEditable ? { backgroundColor: '#edf2f7' } : {},
+              '&:hover': isEditable ? { backgroundColor: hasError ? '#fed7d7' : '#edf2f7' } : {},
               // Pinned cells: ensure sticky background matches row
               ...(isPinned && { backgroundColor: cell.row.index % 2 === 0 ? '#fff' : '#f7fafc' }),
+              // Empty required cells: italic placeholder look
+              ...(isEmptyRequired && {
+                color: '#a0aec0',
+                fontStyle: 'italic',
+                '&::after': { content: '"Wymagane"' },
+              }),
             },
           };
         }}

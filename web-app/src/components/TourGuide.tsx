@@ -36,7 +36,7 @@ const tourSteps = [
     element: '#download-btn',
     popover: {
       title: 'Pobieranie pliku',
-      description: 'Po zakończeniu edycji kliknij tutaj, aby pobrać plik XLSX ze wszystkimi zmianami.',
+      description: 'Po zakończeniu edycji kliknij tutaj, aby pobrać plik XLSX ze wszystkimi zmianami. Plik zostanie zapisany z aktualną datą i godziną w nazwie, więc Twój oryginalny plik pozostanie bez zmian.',
       side: 'bottom' as const,
       align: 'center' as const,
     },
