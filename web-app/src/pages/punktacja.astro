@@ -1,0 +1,140 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const navStyles = 'background-color: #2b6cb0; padding: 12px 24px;';
+const linkStyles = 'color: #ffffff; text-decoration: none; font-weight: 500; font-size: 14px;';
+const mainStyles = 'max-width: 900px; margin: 0 auto; padding: 24px 20px 60px;';
+const h1Styles = 'font-size: 28px; font-weight: 700; color: #1a202c; margin-bottom: 8px;';
+const introStyles = 'color: #4a5568; margin-bottom: 32px; font-size: 15px;';
+const sectionStyles = 'background-color: #ffffff; border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
+const h2Styles = 'font-size: 18px; font-weight: 600; color: #2d3748; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;';
+const descStyles = 'color: #4a5568; font-size: 14px; margin-bottom: 16px;';
+const noteStyles = 'color: #718096; font-size: 13px; font-style: italic; margin-top: 8px;';
+const autoBadgeStyles = 'background-color: #c6f6d5; color: #276749; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;';
+const manualBadgeStyles = 'background-color: #fed7d7; color: #c53030; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;';
+const tableWrapperStyles = 'overflow-x: auto;';
+const tableStyles = 'width: 100%; border-collapse: collapse; font-size: 14px;';
+const thStyles = 'background-color: #edf2f7; padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #cbd5e0; color: #2d3748;';
+const tdStyles = 'padding: 10px 12px; border-bottom: 1px solid #e2e8f0; color: #4a5568;';
+---
+
+<Layout title="Punktacja - Test Sprawności Fizycznej Piłka Ręczna">
+  <nav style={navStyles}>
+    <a href="/" style={linkStyles}>← Powrót do aplikacji</a>
+  </nav>
+
+  <main style={mainStyles}>
+    <h1 style={h1Styles}>📊 Tabela punktowa</h1>
+    <p style={introStyles}>
+      Na podstawie: <em>Test sprawności ukierunkowanej – J. Noszczaka</em>
+    </p>
+
+    <!-- 30m Sprint - Auto-calculated -->
+    <section style={sectionStyles}>
+      <h2 style={h2Styles}>
+        <span style={autoBadgeStyles}>✓ Automatycznie</span>
+        Bieg na 30 m
+      </h2>
+      <p style={descStyles}>Punkty obliczane automatycznie na podstawie czasu.</p>
+      <div style={tableWrapperStyles}>
+        <table style={tableStyles}>
+          <thead>
+            <tr>
+              <th style={thStyles}>Pkt</th>
+              <th style={thStyles}>Czas (s)</th>
+              <th style={thStyles}>Krok</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style={tdStyles}>80</td><td style={tdStyles}>≤3.70</td><td style={tdStyles}>—</td></tr>
+            <tr><td style={tdStyles}>79–35</td><td style={tdStyles}>3.72–4.60</td><td style={tdStyles}>0.02s</td></tr>
+            <tr><td style={tdStyles}>34–20</td><td style={tdStyles}>4.64–5.20</td><td style={tdStyles}>0.04s</td></tr>
+            <tr><td style={tdStyles}>19–14</td><td style={tdStyles}>5.25–5.50</td><td style={tdStyles}>0.05s</td></tr>
+            <tr><td style={tdStyles}>13–10</td><td style={tdStyles}>5.60–5.90</td><td style={tdStyles}>0.10s</td></tr>
+            <tr><td style={tdStyles}>0</td><td style={tdStyles}>&gt;5.90</td><td style={tdStyles}>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Medicine Ball - Manual -->
+    <section style={sectionStyles}>
+      <h2 style={h2Styles}>
+        <span style={manualBadgeStyles}>✗ Ręcznie</span>
+        Rzut piłką lekarską 2 kg
+      </h2>
+      <p style={descStyles}>
+        Suma rzutów przodem i tyłem (metry). Punkty należy wprowadzić ręcznie.
+      </p>
+      <div style={tableWrapperStyles}>
+        <table style={tableStyles}>
+          <thead>
+            <tr>
+              <th style={thStyles}>Pkt</th>
+              <th style={thStyles}>Suma (m)</th>
+              <th style={thStyles}>Krok</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style={tdStyles}>80</td><td style={tdStyles}>30.00</td><td style={tdStyles}>—</td></tr>
+            <tr><td style={tdStyles}>79–35</td><td style={tdStyles}>29.80–21.00</td><td style={tdStyles}>0.20m</td></tr>
+            <tr><td style={tdStyles}>34–20</td><td style={tdStyles}>20.80–18.00</td><td style={tdStyles}>0.20m</td></tr>
+            <tr><td style={tdStyles}>19–14</td><td style={tdStyles}>17.80–16.50</td><td style={tdStyles}>0.20m</td></tr>
+            <tr><td style={tdStyles}>13–10</td><td style={tdStyles}>16.00–14.50</td><td style={tdStyles}>0.50m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Five-Jump - Manual -->
+    <section style={sectionStyles}>
+      <h2 style={h2Styles}>
+        <span style={manualBadgeStyles}>✗ Ręcznie</span>
+        Pięcioskok
+      </h2>
+      <p style={descStyles}>
+        Całkowita odległość w metrach. Punkty należy wprowadzić ręcznie.
+      </p>
+      <div style={tableWrapperStyles}>
+        <table style={tableStyles}>
+          <thead>
+            <tr>
+              <th style={thStyles}>Pkt</th>
+              <th style={thStyles}>Odległość (m)</th>
+              <th style={thStyles}>Krok</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style={tdStyles}>80</td><td style={tdStyles}>13.50</td><td style={tdStyles}>—</td></tr>
+            <tr><td style={tdStyles}>79–40</td><td style={tdStyles}>13.45–11.50</td><td style={tdStyles}>0.05m</td></tr>
+            <tr><td style={tdStyles}>39–35</td><td style={tdStyles}>11.40–11.00</td><td style={tdStyles}>0.10m</td></tr>
+            <tr><td style={tdStyles}>34–20</td><td style={tdStyles}>10.90–9.50</td><td style={tdStyles}>0.10m</td></tr>
+            <tr><td style={tdStyles}>19–10</td><td style={tdStyles}>9.40–7.80</td><td style={tdStyles}>0.20m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Hand Throw - Manual -->
+    <section style={sectionStyles}>
+      <h2 style={h2Styles}>
+        <span style={manualBadgeStyles}>✗ Ręcznie</span>
+        Rzut ręczny
+      </h2>
+      <p style={descStyles}>
+        <strong>Brak tabeli punktowej.</strong> Punkty należy wprowadzić ręcznie.
+      </p>
+    </section>
+
+    <!-- Envelope - Manual -->
+    <section style={sectionStyles}>
+      <h2 style={h2Styles}>
+        <span style={manualBadgeStyles}>✗ Ręcznie</span>
+        Bieg po kopercie
+      </h2>
+      <p style={descStyles}>
+        <strong>Brak tabeli punktowej.</strong> Punkty należy wprowadzić ręcznie.
+      </p>
+    </section>
+  </main>
+</Layout>

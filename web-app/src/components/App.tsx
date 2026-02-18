@@ -19,6 +19,7 @@ const styles = {
     borderRadius: '8px',
     marginBottom: '16px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    position: 'relative' as const,
   },
   title: {
     fontSize: '28px',
@@ -29,6 +30,19 @@ const styles = {
     fontSize: '14px',
     opacity: 0.8,
     marginTop: '4px',
+  },
+  scoringLink: {
+    position: 'absolute' as const,
+    top: '16px',
+    right: '16px',
+    color: '#ffffff',
+    textDecoration: 'none',
+    fontSize: '14px',
+    fontWeight: 500,
+    padding: '6px 12px',
+    borderRadius: '4px',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    transition: 'background-color 0.2s',
   },
   error: {
     padding: '12px 16px',
@@ -109,6 +123,9 @@ export default function App() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
+        <a href="/punktacja" style={styles.scoringLink}>
+          📊 Punktacja
+        </a>
         <h1 style={styles.title}>🤾 Handball Players Sport Test</h1>
         <p style={styles.subtitle}>
           Upload, create, and manage player test data

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__web-search-prime__webSearchPrime",
+      "mcp__zai-mcp-server__extract_text_from_screenshot",
+      "Bash(npm install)"
+    ]
+  }
+}
