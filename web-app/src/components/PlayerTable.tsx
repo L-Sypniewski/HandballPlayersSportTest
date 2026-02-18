@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Player } from '../lib/types';
 import { createEmptyPlayer } from '../lib/types';
 import { calculateSprint30mScore } from '../lib/scoring';
+import styles from './PlayerTable.module.css';
 
 interface PlayerTableProps {
   players: Player[];
@@ -68,6 +69,8 @@ const VALIDATION_RULES: Partial<Record<keyof Player, ValidationRule>> = {
   },
 };
 
+const INVALID_FORMAT_MESSAGE = 'Wymagana liczba';
+
 function validateField(key: keyof Player, value: number | null): string | null {
   const rule = VALIDATION_RULES[key];
   if (!rule || value === null) return null;
@@ -86,24 +89,25 @@ const FIELD_CONFIG: {
   maxLength?: number;
   width: string;
   id?: string;
+  section?: 'sprint' | 'medicineBall' | 'other';
 }[] = [
   { key: 'firstName', label: 'Imię', type: 'text', maxLength: 15, width: '100px', id: 'player-name-cols' },
   { key: 'lastName', label: 'Nazwisko', type: 'text', maxLength: 15, width: '100px', id: 'player-name-cols' },
-  { key: 'sprint30m_time', label: 'Czas 30m', type: 'number', width: '80px', id: 'sprint-col' },
-  { key: 'sprint30m_score', label: 'Wynik 30m', type: 'number', readOnly: true, width: '80px', id: 'sprint-col' },
-  { key: 'medicineBall_forward', label: 'Piłka lekarska\nprzód', type: 'number', width: '75px', id: 'medicine-ball-col' },
-  { key: 'medicineBall_backward', label: 'Piłka lekarska\ntył', type: 'number', width: '75px', id: 'medicine-ball-col' },
-  { key: 'medicineBall_sum', label: 'Piłka lekarska\nsuma', type: 'number', readOnly: true, width: '75px', id: 'medicine-ball-col' },
-  { key: 'medicineBall_score', label: 'Wynik\npiłka lekarska', type: 'number', width: '80px', id: 'other-scores-col' },
-  { key: 'fiveJump_distance', label: 'Pięcioskok\ndystans', type: 'number', width: '85px', id: 'other-scores-col' },
-  { key: 'fiveJump_score', label: 'Wynik\npięcioskok', type: 'number', width: '85px', id: 'other-scores-col' },
-  { key: 'handThrow_distance', label: 'Rzut ręczny\ndystans', type: 'number', width: '85px', id: 'other-scores-col' },
-  { key: 'handThrow_score', label: 'Wynik\nrzut ręczny', type: 'number', width: '85px', id: 'other-scores-col' },
-  { key: 'envelope_time', label: 'Czas\nkoperta', type: 'number', width: '80px', id: 'other-scores-col' },
-  { key: 'envelope_score', label: 'Wynik\nkoperta', type: 'number', width: '80px', id: 'other-scores-col' },
+  { key: 'sprint30m_time', label: 'Czas 30m', type: 'number', width: '80px', id: 'sprint-col', section: 'sprint' },
+  { key: 'sprint30m_score', label: 'Wynik 30m', type: 'number', readOnly: true, width: '80px', id: 'sprint-col', section: 'sprint' },
+  { key: 'medicineBall_forward', label: 'Piłka lekarska\nprzód', type: 'number', width: '75px', id: 'medicine-ball-col', section: 'medicineBall' },
+  { key: 'medicineBall_backward', label: 'Piłka lekarska\ntył', type: 'number', width: '75px', id: 'medicine-ball-col', section: 'medicineBall' },
+  { key: 'medicineBall_sum', label: 'Piłka lekarska\nsuma', type: 'number', readOnly: true, width: '75px', id: 'medicine-ball-col', section: 'medicineBall' },
+  { key: 'medicineBall_score', label: 'Wynik\npiłka lekarska', type: 'number', width: '80px', id: 'other-scores-col', section: 'medicineBall' },
+  { key: 'fiveJump_distance', label: 'Pięcioskok\ndystans', type: 'number', width: '85px', id: 'other-scores-col', section: 'other' },
+  { key: 'fiveJump_score', label: 'Wynik\npięcioskok', type: 'number', width: '85px', id: 'other-scores-col', section: 'other' },
+  { key: 'handThrow_distance', label: 'Rzut ręczny\ndystans', type: 'number', width: '85px', id: 'other-scores-col', section: 'other' },
+  { key: 'handThrow_score', label: 'Wynik\nrzut ręczny', type: 'number', width: '85px', id: 'other-scores-col', section: 'other' },
+  { key: 'envelope_time', label: 'Czas\nkoperta', type: 'number', width: '80px', id: 'other-scores-col', section: 'other' },
+  { key: 'envelope_score', label: 'Wynik\nkoperta', type: 'number', width: '80px', id: 'other-scores-col', section: 'other' },
 ];
 
-// CSS styles as a string for injection
+// CSS styles for validation tooltips (injected once)
 const cssStyles = `
   .input-wrapper {
     position: relative;
@@ -158,97 +162,6 @@ const cssStyles = `
   }
 `;
 
-const styles = {
-  wrapper: {
-    overflowX: 'auto' as const,
-    marginTop: '12px',
-    backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    padding: '16px',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse' as const,
-    fontSize: '13px',
-  },
-  th: {
-    padding: '10px 6px',
-    backgroundColor: '#2b6cb0',
-    color: '#ffffff',
-    fontWeight: 600 as const,
-    textAlign: 'center' as const,
-    whiteSpace: 'pre-line' as const,
-    fontSize: '12px',
-    borderBottom: '2px solid #2c5282',
-    lineHeight: 1.3,
-  },
-  td: {
-    padding: '4px',
-    textAlign: 'center' as const,
-    borderBottom: '1px solid #e2e8f0',
-    verticalAlign: 'top' as const,
-  },
-  input: {
-    width: '100%',
-    padding: '6px 4px',
-    border: '1px solid #e2e8f0',
-    borderRadius: '4px',
-    fontSize: '13px',
-    textAlign: 'center' as const,
-    backgroundColor: '#ffffff',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-  },
-  readOnlyInput: {
-    backgroundColor: '#f7fafc',
-    color: '#718096',
-    border: '1px solid #edf2f7',
-  },
-  actionTh: {
-    padding: '10px 6px',
-    backgroundColor: '#2b6cb0',
-    color: '#ffffff',
-    fontWeight: 600 as const,
-    textAlign: 'center' as const,
-    width: '50px',
-  },
-  removeBtn: {
-    padding: '4px 10px',
-    border: 'none',
-    borderRadius: '4px',
-    backgroundColor: '#e53e3e',
-    color: '#ffffff',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: 600 as const,
-  },
-  addBtn: {
-    marginTop: '12px',
-    padding: '10px 20px',
-    border: '2px dashed #a0aec0',
-    borderRadius: '6px',
-    backgroundColor: 'transparent',
-    color: '#4a5568',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 500 as const,
-    transition: 'all 0.2s',
-  },
-  emptyMsg: {
-    textAlign: 'center' as const,
-    padding: '40px 20px',
-    color: '#a0aec0',
-    fontSize: '16px',
-  },
-  rowIndex: {
-    padding: '4px 8px',
-    color: '#a0aec0',
-    fontSize: '12px',
-    textAlign: 'center' as const,
-    borderBottom: '1px solid #e2e8f0',
-  },
-};
-
 export default function PlayerTable({
   players,
   onUpdatePlayers,
@@ -267,37 +180,46 @@ export default function PlayerTable({
     if (key === 'firstName' || key === 'lastName') {
       player[key] = value.slice(0, 15);
     } else {
-      const numVal = value === '' ? null : Number(value);
-      (player as Record<string, unknown>)[key] =
-        numVal !== null && isNaN(numVal) ? null : numVal;
+      // For numeric fields, validate the raw string input first
+      const trimmedValue = value.trim();
 
-      // Validate and update error state
-      if (numVal !== null && !isNaN(numVal)) {
-        const error = validateField(key, numVal);
-        if (error) {
-          setValidationErrors(prev => ({ ...prev, [inputKey]: error }));
-        } else {
-          setValidationErrors(prev => {
-            const updated = { ...prev };
-            delete updated[inputKey];
-            return updated;
-          });
-        }
-      } else {
-        // Clear error when field is empty or invalid number
+      if (trimmedValue === '') {
+        // Empty or whitespace-only - clear value and error
+        (player as Record<string, unknown>)[key] = null;
         setValidationErrors(prev => {
           const updated = { ...prev };
           delete updated[inputKey];
           return updated;
         });
+      } else {
+        const numVal = Number(trimmedValue);
+
+        if (isNaN(numVal)) {
+          // Non-numeric input (letters, symbols) - show format error
+          (player as Record<string, unknown>)[key] = null;
+          setValidationErrors(prev => ({ ...prev, [inputKey]: INVALID_FORMAT_MESSAGE }));
+        } else {
+          // Valid number - check range
+          (player as Record<string, unknown>)[key] = numVal;
+          const error = validateField(key, numVal);
+          if (error) {
+            setValidationErrors(prev => ({ ...prev, [inputKey]: error }));
+          } else {
+            setValidationErrors(prev => {
+              const updated = { ...prev };
+              delete updated[inputKey];
+              return updated;
+            });
+          }
+        }
       }
     }
 
     // Auto-calculate sprint score
     if (key === 'sprint30m_time') {
-      const time = value === '' ? null : Number(value);
+      const time = player.sprint30m_time;
       player.sprint30m_score =
-        time !== null && !isNaN(time) ? calculateSprint30mScore(time) : null;
+        time !== null ? calculateSprint30mScore(time) : null;
     }
 
     // Auto-calculate medicine ball sum
@@ -331,92 +253,265 @@ export default function PlayerTable({
     onUpdatePlayers(updated);
   };
 
+  // Render input with validation tooltip
+  const renderInput = (playerIndex: number, field: typeof FIELD_CONFIG[0]) => {
+    const inputKey = `${playerIndex}-${field.key}`;
+    const errorMsg = validationErrors[inputKey];
+    const hasError = !!errorMsg;
+
+    return (
+      <div className="input-wrapper">
+        <input
+          style={{ width: field.width }}
+          className={`${styles.input} ${field.readOnly ? styles.readOnlyInput : ''} ${hasError ? 'input-invalid' : ''}`}
+          type={field.type}
+          value={players[playerIndex][field.key] ?? ''}
+          readOnly={field.readOnly}
+          maxLength={field.maxLength}
+          step={field.type === 'number' ? 'any' : undefined}
+          onChange={(e) => handleFieldChange(playerIndex, field.key, e.target.value)}
+        />
+        {hasError && (
+          <span className="validation-tooltip">{errorMsg}</span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       <style>{cssStyles}</style>
-      <div id="player-table" style={styles.wrapper}>
+      <div id="player-table" className={styles.wrapper}>
         {players.length === 0 ? (
-          <div style={styles.emptyMsg}>
+          <div className={styles.emptyMsg}>
             Brak zawodników. Kliknij "Dodaj zawodnika", aby rozpocząć.
           </div>
         ) : (
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.actionTh}>#</th>
-                {FIELD_CONFIG.map((field, index) => {
-                  const prevField = FIELD_CONFIG[index - 1];
-                  const isFirstInGroup = !prevField || prevField.id !== field.id;
-                  return (
-                    <th
-                      key={field.key}
-                      id={isFirstInGroup && field.id ? field.id : undefined}
-                      style={styles.th}
-                    >
-                      {field.label}
-                    </th>
-                  );
-                })}
-                <th style={styles.actionTh}>Usuń</th>
-              </tr>
-            </thead>
-            <tbody>
-              {players.map((player, pIdx) => (
-                <tr
-                  key={pIdx}
-                  style={{
-                    backgroundColor: pIdx % 2 === 0 ? '#ffffff' : '#f7fafc',
-                  }}
-                >
-                  <td style={styles.rowIndex}>{pIdx + 1}</td>
-                  {FIELD_CONFIG.map((field) => {
-                    const inputKey = `${pIdx}-${field.key}`;
-                    const errorMsg = validationErrors[inputKey];
-                    const hasError = !!errorMsg;
-
+          <>
+            {/* Table view for larger screens */}
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th className={styles.actionTh}>#</th>
+                  {FIELD_CONFIG.map((field, index) => {
+                    const prevField = FIELD_CONFIG[index - 1];
+                    const isFirstInGroup = !prevField || prevField.id !== field.id;
                     return (
-                      <td key={field.key} style={styles.td}>
-                        <div className="input-wrapper">
-                          <input
-                            style={{
-                              ...styles.input,
-                              ...(field.readOnly ? styles.readOnlyInput : {}),
-                              width: field.width,
-                            }}
-                            type={field.type}
-                            value={player[field.key] ?? ''}
-                            readOnly={field.readOnly}
-                            maxLength={field.maxLength}
-                            step={field.type === 'number' ? 'any' : undefined}
-                            onChange={(e) =>
-                              handleFieldChange(pIdx, field.key, e.target.value)
-                            }
-                            className={hasError ? 'input-invalid' : undefined}
-                          />
-                          {hasError && (
-                            <span className="validation-tooltip">
-                              {errorMsg}
-                            </span>
-                          )}
-                        </div>
-                      </td>
+                      <th
+                        key={field.key}
+                        id={isFirstInGroup && field.id ? field.id : undefined}
+                        className={styles.th}
+                      >
+                        {field.label}
+                      </th>
                     );
                   })}
-                  <td style={styles.td}>
+                  <th className={styles.actionTh}>Usuń</th>
+                </tr>
+              </thead>
+              <tbody>
+                {players.map((player, pIdx) => (
+                  <tr
+                    key={pIdx}
+                    className={pIdx % 2 === 0 ? styles.evenRow : styles.oddRow}
+                  >
+                    <td className={styles.rowIndex}>{pIdx + 1}</td>
+                    {FIELD_CONFIG.map((field) => (
+                      <td key={field.key} className={styles.td}>
+                        {renderInput(pIdx, field)}
+                      </td>
+                    ))}
+                    <td className={styles.td}>
+                      <button
+                        className={styles.removeBtn}
+                        onClick={() => handleRemovePlayer(pIdx)}
+                        title="Usuń zawodnika"
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Card view for mobile screens */}
+            <div className={styles.cardContainer}>
+              {players.map((player, pIdx) => (
+                <div key={pIdx} className={styles.playerCard}>
+                  <div className={styles.cardHeader}>
+                    <span className={styles.cardPlayerNumber}>#{pIdx + 1}</span>
+                    <div className={styles.cardPlayerName}>
+                      <input
+                        className={styles.cardNameInput}
+                        type="text"
+                        placeholder="Imię"
+                        value={player.firstName ?? ''}
+                        maxLength={15}
+                        onChange={(e) => handleFieldChange(pIdx, 'firstName', e.target.value)}
+                      />
+                      <input
+                        className={styles.cardNameInput}
+                        type="text"
+                        placeholder="Nazwisko"
+                        value={player.lastName ?? ''}
+                        maxLength={15}
+                        onChange={(e) => handleFieldChange(pIdx, 'lastName', e.target.value)}
+                      />
+                    </div>
                     <button
-                      style={styles.removeBtn}
+                      className={styles.cardRemoveBtn}
                       onClick={() => handleRemovePlayer(pIdx)}
                       title="Usuń zawodnika"
                     >
                       ✕
                     </button>
-                  </td>
-                </tr>
+                  </div>
+
+                  {/* Sprint 30m section */}
+                  <div className={styles.cardSection}>
+                    <div className={styles.cardSectionTitle}>Bieg 30m</div>
+                    <div className={styles.cardFields}>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Czas (s)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.sprint30m_time ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'sprint30m_time', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Wynik (pkt)</span>
+                        <input
+                          className={`${styles.cardInput} ${styles.readOnly}`}
+                          type="number"
+                          value={player.sprint30m_score ?? ''}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Medicine ball section */}
+                  <div className={styles.cardSection}>
+                    <div className={styles.cardSectionTitle}>Piłka lekarska</div>
+                    <div className={styles.cardFields}>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Przód (m)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.medicineBall_forward ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'medicineBall_forward', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Tył (m)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.medicineBall_backward ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'medicineBall_backward', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Suma (m)</span>
+                        <input
+                          className={`${styles.cardInput} ${styles.readOnly}`}
+                          type="number"
+                          value={player.medicineBall_sum ?? ''}
+                          readOnly
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Wynik (pkt)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.medicineBall_score ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'medicineBall_score', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Other tests section */}
+                  <div className={styles.cardSection}>
+                    <div className={styles.cardSectionTitle}>Inne testy</div>
+                    <div className={styles.cardFields}>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Pięcioskok (m)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.fiveJump_distance ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'fiveJump_distance', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Wynik (pkt)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.fiveJump_score ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'fiveJump_score', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Rzut ręczny (m)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.handThrow_distance ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'handThrow_distance', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Wynik (pkt)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.handThrow_score ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'handThrow_score', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Koperta (s)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.envelope_time ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'envelope_time', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.cardField}>
+                        <span className={styles.cardLabel}>Wynik (pkt)</span>
+                        <input
+                          className={styles.cardInput}
+                          type="number"
+                          step="any"
+                          value={player.envelope_score ?? ''}
+                          onChange={(e) => handleFieldChange(pIdx, 'envelope_score', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
-        <button id="add-player-btn" style={styles.addBtn} onClick={handleAddPlayer}>
+        <button id="add-player-btn" className={styles.addBtn} onClick={handleAddPlayer}>
           + Dodaj zawodnika
         </button>
       </div>

@@ -3,8 +3,6 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  container-type: inline-size;
-  container-name: app;
 }
 
 /* Header styles */
@@ -16,7 +14,6 @@
   border-radius: 8px;
   margin-bottom: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
 }
 
 .title {
@@ -31,48 +28,6 @@
   margin-top: 4px;
 }
 
-.headerButtons {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.scoringLink {
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.15);
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.scoringLink:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
-.helpBtn {
-  color: #ffffff;
-  border: none;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 6px 12px;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.helpBtn:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
 .error {
   padding: 12px 16px;
   background-color: #fed7d7;
@@ -82,15 +37,14 @@
   font-size: 14px;
 }
 
-/* Container queries for responsive header */
-@container app (max-width: 600px) {
+/* Responsive styles */
+@media (max-width: 600px) {
   .container {
     padding: 12px;
   }
 
   .header {
     padding: 16px;
-    padding-top: 70px; /* Space for stacked buttons */
   }
 
   .title {
@@ -100,34 +54,10 @@
   .subtitle {
     font-size: 12px;
   }
-
-  .headerButtons {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    justify-content: center;
-  }
-
-  .scoringLink,
-  .helpBtn {
-    font-size: 12px;
-    padding: 6px 10px;
-  }
 }
 
-@container app (max-width: 400px) {
+@media (max-width: 400px) {
   .title {
     font-size: 16px;
-  }
-
-  .headerButtons {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .scoringLink,
-  .helpBtn {
-    text-align: center;
   }
 }

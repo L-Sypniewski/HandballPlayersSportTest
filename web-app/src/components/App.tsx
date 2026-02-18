@@ -170,19 +170,6 @@ export default function App() {
     <div className={styles.container}>
       <TourGuide onTourStart={handleTourStart} onTourEnd={handleTourEnd} />
       <div className={styles.header}>
-        <div className={styles.headerButtons}>
-          <button
-            id="help-btn"
-            className={styles.helpBtn}
-            onClick={handleStartTourClick}
-            title="Uruchom przewodnik"
-          >
-            🎓 Pokaż samouczek
-          </button>
-          <a id="scoring-link" href="/punktacja" className={styles.scoringLink}>
-            📊 Punktacja
-          </a>
-        </div>
         <h1 className={styles.title}>🤾 Test Sprawności Fizycznej Piłkarzy Ręcznych</h1>
         <p className={styles.subtitle}>
           Prześlij, utwórz i zarządzaj danymi testowymi zawodników
@@ -193,6 +180,7 @@ export default function App() {
         onUpload={handleUpload}
         onDownload={handleDownload}
         onNewFile={handleNewFile}
+        onStartTour={handleStartTourClick}
         hasData={hasData}
         hasUnsavedChanges={hasUnsavedChanges}
         isTourActive={isTourActive}
