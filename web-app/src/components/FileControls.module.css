@@ -1,0 +1,137 @@
+/* Wrapper for buttons row and unsaved indicator */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* File controls container */
+.container {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  flex-wrap: wrap;
+  container-type: inline-size;
+  container-name: file-controls;
+}
+
+/* Base button styles */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.uploadBtn {
+  background-color: #3182ce;
+  color: #ffffff;
+}
+
+.uploadBtn:hover {
+  background-color: #2c5282;
+}
+
+.newBtn {
+  background-color: #38a169;
+  color: #ffffff;
+}
+
+.newBtn:hover {
+  background-color: #2f855a;
+}
+
+.downloadBtn {
+  background-color: #2b6cb0;
+  color: #ffffff;
+}
+
+.downloadBtn:hover {
+  background-color: #2c5282;
+}
+
+.disabledBtn {
+  background-color: #a0aec0;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+.helpBtn {
+  background-color: #805ad5;
+  color: #ffffff;
+}
+
+.helpBtn:hover {
+  background-color: #6b46c1;
+}
+
+.scoringBtn {
+  background-color: #319795;
+  color: #ffffff;
+}
+
+.scoringBtn:hover {
+  background-color: #2c7a7b;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+/* Unsaved changes indicator */
+.unsavedIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #fef3c7;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.unsavedDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+}
+
+/* Container queries for responsive buttons */
+@container file-controls (max-width: 700px) {
+  .container {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}
+
+@container file-controls (max-width: 550px) {
+  .container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
