@@ -117,7 +117,16 @@ const tourSteps = [
     element: '#scoring-link',
     popover: {
       title: 'Tabela punktacji',
-      description: 'Kliknij tutaj, aby zobaczyć tabelę punktacji dla wszystkich testów. Pomaga to zrozumieć, jak obliczane są wyniki.',
+      description: 'Kliknij tutaj, aby zobaczyć szczegółowe tabele punktacji dla wszystkich testów. Pomaga to ustalić, ile punktów przysługuje za dany wynik.',
+      side: 'left' as const,
+      align: 'center' as const,
+    },
+  },
+  {
+    element: '#help-btn',
+    popover: {
+      title: 'Pomoc',
+      description: 'Możesz ponownie uruchomić ten samouczek w dowolnym momencie, klikając ten przycisk.',
       side: 'left' as const,
       align: 'center' as const,
     },

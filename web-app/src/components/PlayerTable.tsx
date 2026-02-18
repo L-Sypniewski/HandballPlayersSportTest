@@ -14,21 +14,22 @@ const FIELD_CONFIG: {
   readOnly?: boolean;
   maxLength?: number;
   width: string;
+  id?: string;
 }[] = [
-  { key: 'firstName', label: 'Imię', type: 'text', maxLength: 15, width: '100px' },
-  { key: 'lastName', label: 'Nazwisko', type: 'text', maxLength: 15, width: '100px' },
-  { key: 'sprint30m_time', label: 'Czas 30m', type: 'number', width: '80px' },
-  { key: 'sprint30m_score', label: 'Wynik 30m', type: 'number', readOnly: true, width: '80px' },
-  { key: 'medicineBall_forward', label: 'Piłka lekarska\nprzód', type: 'number', width: '75px' },
-  { key: 'medicineBall_backward', label: 'Piłka lekarska\ntył', type: 'number', width: '75px' },
-  { key: 'medicineBall_sum', label: 'Piłka lekarska\nsuma', type: 'number', readOnly: true, width: '75px' },
-  { key: 'medicineBall_score', label: 'Wynik\npiłka lekarska', type: 'number', width: '80px' },
-  { key: 'fiveJump_distance', label: 'Pięcioskok\ndystans', type: 'number', width: '85px' },
-  { key: 'fiveJump_score', label: 'Wynik\npięcioskok', type: 'number', width: '85px' },
-  { key: 'handThrow_distance', label: 'Rzut ręczny\ndystans', type: 'number', width: '85px' },
-  { key: 'handThrow_score', label: 'Wynik\nrzut ręczny', type: 'number', width: '85px' },
-  { key: 'envelope_time', label: 'Czas\nkoperta', type: 'number', width: '80px' },
-  { key: 'envelope_score', label: 'Wynik\nkoperta', type: 'number', width: '80px' },
+  { key: 'firstName', label: 'Imię', type: 'text', maxLength: 15, width: '100px', id: 'player-name-cols' },
+  { key: 'lastName', label: 'Nazwisko', type: 'text', maxLength: 15, width: '100px', id: 'player-name-cols' },
+  { key: 'sprint30m_time', label: 'Czas 30m', type: 'number', width: '80px', id: 'sprint-col' },
+  { key: 'sprint30m_score', label: 'Wynik 30m', type: 'number', readOnly: true, width: '80px', id: 'sprint-col' },
+  { key: 'medicineBall_forward', label: 'Piłka lekarska\nprzód', type: 'number', width: '75px', id: 'medicine-ball-col' },
+  { key: 'medicineBall_backward', label: 'Piłka lekarska\ntył', type: 'number', width: '75px', id: 'medicine-ball-col' },
+  { key: 'medicineBall_sum', label: 'Piłka lekarska\nsuma', type: 'number', readOnly: true, width: '75px', id: 'medicine-ball-col' },
+  { key: 'medicineBall_score', label: 'Wynik\npiłka lekarska', type: 'number', width: '80px', id: 'other-scores-col' },
+  { key: 'fiveJump_distance', label: 'Pięcioskok\ndystans', type: 'number', width: '85px', id: 'other-scores-col' },
+  { key: 'fiveJump_score', label: 'Wynik\npięcioskok', type: 'number', width: '85px', id: 'other-scores-col' },
+  { key: 'handThrow_distance', label: 'Rzut ręczny\ndystans', type: 'number', width: '85px', id: 'other-scores-col' },
+  { key: 'handThrow_score', label: 'Wynik\nrzut ręczny', type: 'number', width: '85px', id: 'other-scores-col' },
+  { key: 'envelope_time', label: 'Czas\nkoperta', type: 'number', width: '80px', id: 'other-scores-col' },
+  { key: 'envelope_score', label: 'Wynik\nkoperta', type: 'number', width: '80px', id: 'other-scores-col' },
 ];
 
 const styles = {
@@ -180,11 +181,20 @@ export default function PlayerTable({
           <thead>
             <tr>
               <th style={styles.actionTh}>#</th>
-              {FIELD_CONFIG.map((field) => (
-                <th key={field.key} style={styles.th}>
-                  {field.label}
-                </th>
-              ))}
+              {FIELD_CONFIG.map((field, index) => {
+                // Only add ID to first column of each group
+                const prevField = FIELD_CONFIG[index - 1];
+                const isFirstInGroup = !prevField || prevField.id !== field.id;
+                return (
+                  <th
+                    key={field.key}
+                    id={isFirstInGroup && field.id ? field.id : undefined}
+                    style={styles.th}
+                  >
+                    {field.label}
+                  </th>
+                );
+              })}
               <th style={styles.actionTh}>Usuń</th>
             </tr>
           </thead>
