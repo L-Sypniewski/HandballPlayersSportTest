@@ -4,7 +4,7 @@ import { SAMPLE_PLAYERS } from '../lib/types';
 import { readExcelFile, writeExcelFile } from '../lib/excel';
 import FileControls from './FileControls';
 import GroupTabs from './GroupTabs';
-import PlayerTable from './PlayerTable';
+import PlayerTableMRT from './PlayerTableMRT';
 import TourGuide, { useTourGuide } from './TourGuide';
 import styles from './App.module.css';
 
@@ -170,7 +170,9 @@ export default function App() {
     <div className={styles.container}>
       <TourGuide onTourStart={handleTourStart} onTourEnd={handleTourEnd} />
       <div className={styles.header}>
-        <h1 className={styles.title}>🤾 Test Sprawności Fizycznej Piłkarzy Ręcznych</h1>
+        <div className={styles.headerTop}>
+          <h1 className={styles.title}>🤾 Test Sprawności Fizycznej Piłkarzy Ręcznych</h1>
+        </div>
         <p className={styles.subtitle}>
           Prześlij, utwórz i zarządzaj danymi testowymi zawodników
         </p>
@@ -199,7 +201,7 @@ export default function App() {
             onRenameGroup={handleRenameGroup}
           />
 
-          <PlayerTable
+          <PlayerTableMRT
             players={groups[activeGroupIndex].players}
             onUpdatePlayers={handleUpdatePlayers}
           />
