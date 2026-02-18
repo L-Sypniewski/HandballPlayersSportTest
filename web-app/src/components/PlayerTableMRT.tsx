@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { HotTable } from '@handsontable/react-wrapper';
-import { Box, Button } from '@mui/material';
+import { Box, Button, useMediaQuery } from '@mui/material';
 import { registerAllModules } from 'handsontable/registry';
 import type { Player } from '../lib/types';
 import { createEmptyPlayer } from '../lib/types';
@@ -54,6 +54,7 @@ const NUMBER_FIELDS = new Set<keyof Player>([
 export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKey }: PlayerTableProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width:768px)');
 
   useEffect(() => {
     const holder = tableContainerRef.current?.querySelector<HTMLElement>('.wtHolder');
@@ -214,18 +215,24 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
             'Wynik koperta',
           ]}
           width="100%"
-          height={600}
-          rowHeaders={true}
-          stretchH="all"
+          height={isMobile ? 460 : 600}
+          rowHeaders={!isMobile}
+          stretchH={isMobile ? 'none' : 'all'}
           autoWrapRow={true}
           autoWrapCol={true}
-          manualColumnResize={true}
+          manualColumnResize={!isMobile}
+          colWidths={isMobile ? [40, 120, 120, 95, 85, 110, 110, 110, 110, 115, 110, 120, 120, 105, 105] : undefined}
           contextMenu={['remove_row']}
           licenseKey="non-commercial-and-evaluation"
           afterChange={handleAfterChange}
           afterRemoveRow={handleAfterRemoveRow}
         />
       </div>
+      {isMobile && (
+        <Box sx={{ mt: 1, color: '#4a5568', fontSize: '12px' }}>
+          Wskazówka: przesuń tabelę poziomo, aby zobaczyć wszystkie kolumny.
+        </Box>
+      )}
 
       <Button
         id="add-player-btn"
