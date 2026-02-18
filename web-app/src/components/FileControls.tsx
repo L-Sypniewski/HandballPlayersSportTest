@@ -1,59 +1,22 @@
 import { useRef } from 'react';
+import styles from './FileControls.module.css';
 
 interface FileControlsProps {
   onUpload: (file: File) => void;
   onDownload: () => void;
   onNewFile: () => void;
   hasData: boolean;
+  hasUnsavedChanges: boolean;
+  isTourActive?: boolean;
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    gap: '12px',
-    padding: '16px 24px',
-    backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    alignItems: 'center',
-    flexWrap: 'wrap' as const,
-  },
-  btn: {
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
-    fontWeight: 600 as const,
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-  },
-  uploadBtn: {
-    backgroundColor: '#3182ce',
-    color: '#ffffff',
-  },
-  newBtn: {
-    backgroundColor: '#38a169',
-    color: '#ffffff',
-  },
-  downloadBtn: {
-    backgroundColor: '#2b6cb0',
-    color: '#ffffff',
-  },
-  disabledBtn: {
-    backgroundColor: '#a0aec0',
-    color: '#ffffff',
-    cursor: 'not-allowed' as const,
-  },
-  hiddenInput: {
-    display: 'none',
-  },
-};
 
 export default function FileControls({
   onUpload,
   onDownload,
   onNewFile,
   hasData,
+  hasUnsavedChanges,
+  isTourActive = false,
 }: FileControlsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,40 +28,48 @@ export default function FileControls({
     }
   };
 
+  const showUnsavedIndicator = hasUnsavedChanges || isTourActive;
+
   return (
-    <div id="file-controls" style={styles.container}>
+    <div id="file-controls" className={styles.container}>
       <input
         ref={fileInputRef}
         type="file"
         accept=".xlsx"
         onChange={handleFileChange}
-        style={styles.hiddenInput}
+        className={styles.hiddenInput}
       />
       <button
         id="upload-btn"
-        style={{ ...styles.btn, ...styles.uploadBtn }}
+        className={`${styles.btn} ${styles.uploadBtn}`}
         onClick={() => fileInputRef.current?.click()}
       >
         📂 Prześlij XLSX
       </button>
       <button
         id="new-file-btn"
-        style={{ ...styles.btn, ...styles.newBtn }}
+        className={`${styles.btn} ${styles.newBtn}`}
         onClick={onNewFile}
       >
         ✨ Nowy plik
       </button>
       <button
         id="download-btn"
-        style={{
-          ...styles.btn,
-          ...(hasData ? styles.downloadBtn : styles.disabledBtn),
-        }}
+        className={`${styles.btn} ${hasData ? styles.downloadBtn : styles.disabledBtn}`}
         onClick={onDownload}
         disabled={!hasData}
       >
         💾 Pobierz XLSX
       </button>
+      <div
+        id="unsaved-indicator"
+        className={styles.unsavedIndicator}
+        style={{ visibility: showUnsavedIndicator ? 'visible' : 'hidden' }}
+        title="Masz niezapisane zmiany. Kliknij 'Pobierz XLSX', aby zapisać."
+      >
+        <span className={styles.unsavedDot} />
+        Niezapisane zmiany
+      </div>
     </div>
   );
 }

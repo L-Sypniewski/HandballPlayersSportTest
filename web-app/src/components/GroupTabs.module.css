@@ -1,0 +1,137 @@
+/* Group tabs container */
+.container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  margin-top: 12px;
+  container-type: inline-size;
+  container-name: group-tabs;
+}
+
+/* Tab styles */
+.tab {
+  padding: 8px 16px;
+  border: 2px solid transparent;
+  border-radius: 6px 6px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: #edf2f7;
+  color: #4a5568;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab:hover {
+  background-color: #e2e8f0;
+}
+
+.activeTab {
+  background-color: #3182ce;
+  color: #ffffff;
+  border-color: #2b6cb0;
+}
+
+.activeTab:hover {
+  background-color: #2b6cb0;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.removeBtn:hover {
+  opacity: 1;
+}
+
+.addBtn {
+  padding: 8px 16px;
+  border: 2px dashed #a0aec0;
+  border-radius: 6px 6px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background-color: transparent;
+  color: #718096;
+  transition: all 0.2s;
+}
+
+.addBtn:hover {
+  border-color: #718096;
+  color: #4a5568;
+}
+
+.renameInput {
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid #3182ce;
+  border-radius: 4px;
+  outline: none;
+  width: 120px;
+}
+
+.tabName {
+  user-select: none;
+}
+
+/* Container queries for responsive tabs */
+@container group-tabs (max-width: 600px) {
+  .container {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  .tab {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .addBtn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .renameInput {
+    width: 100px;
+    font-size: 13px;
+  }
+}
+
+@container group-tabs (max-width: 400px) {
+  .tab {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+
+  .tabName {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .addBtn {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+
+  .renameInput {
+    width: 80px;
+  }
+}

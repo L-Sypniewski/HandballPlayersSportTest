@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Group } from '../lib/types';
 import { SAMPLE_PLAYERS } from '../lib/types';
 import { readExcelFile, writeExcelFile } from '../lib/excel';
@@ -6,69 +6,11 @@ import FileControls from './FileControls';
 import GroupTabs from './GroupTabs';
 import PlayerTable from './PlayerTable';
 import TourGuide, { useTourGuide } from './TourGuide';
+import styles from './App.module.css';
 
-const styles = {
-  container: {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '20px',
-  },
-  header: {
-    textAlign: 'center' as const,
-    padding: '24px',
-    backgroundColor: '#2b6cb0',
-    color: '#ffffff',
-    borderRadius: '8px',
-    marginBottom: '16px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    position: 'relative' as const,
-  },
-  title: {
-    fontSize: '28px',
-    fontWeight: 700 as const,
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: '14px',
-    opacity: 0.8,
-    marginTop: '4px',
-  },
-  headerButtons: {
-    position: 'absolute' as const,
-    top: '16px',
-    right: '16px',
-    display: 'flex',
-    gap: '8px',
-  },
-  scoringLink: {
-    color: '#ffffff',
-    textDecoration: 'none',
-    fontSize: '14px',
-    fontWeight: 500,
-    padding: '6px 12px',
-    borderRadius: '4px',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    transition: 'background-color 0.2s',
-  },
-  helpBtn: {
-    color: '#ffffff',
-    border: 'none',
-    fontSize: '14px',
-    fontWeight: 500,
-    padding: '6px 12px',
-    borderRadius: '4px',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-  },
-  error: {
-    padding: '12px 16px',
-    backgroundColor: '#fed7d7',
-    color: '#c53030',
-    borderRadius: '6px',
-    marginTop: '12px',
-    fontSize: '14px',
-  },
+// Deep comparison helper for groups arrays
+const groupsAreEqual = (a: Group[], b: Group[]): boolean => {
+  return JSON.stringify(a) === JSON.stringify(b);
 };
 
 const DEFAULT_GROUPS: Group[] = [{ name: 'Grupa 1', players: [] }];
@@ -82,12 +24,24 @@ export default function App() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [activeGroupIndex, setActiveGroupIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isTourActive, setIsTourActive] = useState(false);
   const { startTour } = useTourGuide();
 
   // Track if current data is sample data shown for tour
   const isShowingSampleDataRef = useRef(false);
 
+  // Store baseline for unsaved changes detection
+  const baselineGroupsRef = useRef<Group[] | null>(null);
+
   const hasData = groups.length > 0;
+
+  // Check for changes whenever groups change
+  useEffect(() => {
+    if (baselineGroupsRef.current !== null) {
+      setHasUnsavedChanges(!groupsAreEqual(groups, baselineGroupsRef.current));
+    }
+  }, [groups]);
 
   const handleUpload = async (file: File) => {
     try {
@@ -99,6 +53,9 @@ export default function App() {
       }
       setGroups(loaded);
       setActiveGroupIndex(0);
+      // Update baseline after successful upload
+      baselineGroupsRef.current = JSON.parse(JSON.stringify(loaded));
+      setHasUnsavedChanges(false);
     } catch (err) {
       setError(`Nie udało się odczytać pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -120,6 +77,9 @@ export default function App() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      // Update baseline after successful download
+      baselineGroupsRef.current = JSON.parse(JSON.stringify(groups));
+      setHasUnsavedChanges(false);
     } catch (err) {
       setError(`Nie udało się utworzyć pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -127,9 +87,13 @@ export default function App() {
 
   const handleNewFile = () => {
     isShowingSampleDataRef.current = false;
-    setGroups([...DEFAULT_GROUPS.map((g) => ({ ...g, players: [...g.players] }))]);
+    const newGroups = [...DEFAULT_GROUPS.map((g) => ({ ...g, players: [...g.players] }))];
+    setGroups(newGroups);
     setActiveGroupIndex(0);
     setError(null);
+    // Update baseline after creating new file
+    baselineGroupsRef.current = JSON.parse(JSON.stringify(newGroups));
+    setHasUnsavedChanges(false);
   };
 
   const handleAddGroup = () => {
@@ -160,6 +124,7 @@ export default function App() {
   };
 
   const handleTourStart = () => {
+    setIsTourActive(true);
     // Only load sample data if there's no existing data
     if (groups.length === 0) {
       isShowingSampleDataRef.current = true;
@@ -169,6 +134,7 @@ export default function App() {
   };
 
   const handleTourEnd = () => {
+    setIsTourActive(false);
     // Clear sample data only if it wasn't modified by user
     if (isShowingSampleDataRef.current) {
       setGroups([]);
@@ -182,7 +148,9 @@ export default function App() {
       isShowingSampleDataRef.current = true;
       setGroups(createSampleGroups());
       setActiveGroupIndex(0);
+      setIsTourActive(true);
       startTour(() => {
+        setIsTourActive(false);
         // Clear sample data after tour ends
         if (isShowingSampleDataRef.current) {
           setGroups([]);
@@ -191,29 +159,32 @@ export default function App() {
       });
     } else {
       // User has data, just start tour without modifying data
-      startTour();
+      setIsTourActive(true);
+      startTour(() => {
+        setIsTourActive(false);
+      });
     }
   };
 
   return (
-    <div style={styles.container}>
+    <div className={styles.container}>
       <TourGuide onTourStart={handleTourStart} onTourEnd={handleTourEnd} />
-      <div style={styles.header}>
-        <div style={styles.headerButtons}>
+      <div className={styles.header}>
+        <div className={styles.headerButtons}>
           <button
             id="help-btn"
-            style={styles.helpBtn}
+            className={styles.helpBtn}
             onClick={handleStartTourClick}
             title="Uruchom przewodnik"
           >
             🎓 Pokaż samouczek
           </button>
-          <a id="scoring-link" href="/punktacja" style={styles.scoringLink}>
+          <a id="scoring-link" href="/punktacja" className={styles.scoringLink}>
             📊 Punktacja
           </a>
         </div>
-        <h1 style={styles.title}>🤾 Test Sprawności Fizycznej Piłkarzy Ręcznych</h1>
-        <p style={styles.subtitle}>
+        <h1 className={styles.title}>🤾 Test Sprawności Fizycznej Piłkarzy Ręcznych</h1>
+        <p className={styles.subtitle}>
           Prześlij, utwórz i zarządzaj danymi testowymi zawodników
         </p>
       </div>
@@ -223,9 +194,11 @@ export default function App() {
         onDownload={handleDownload}
         onNewFile={handleNewFile}
         hasData={hasData}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isTourActive={isTourActive}
       />
 
-      {error && <div style={styles.error}>{error}</div>}
+      {error && <div className={styles.error}>{error}</div>}
 
       {hasData && (
         <>

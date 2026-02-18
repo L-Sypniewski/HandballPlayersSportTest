@@ -42,6 +42,15 @@ const tourSteps = [
     },
   },
   {
+    element: '#unsaved-indicator',
+    popover: {
+      title: 'Wskaźnik niezapisanych zmian',
+      description: 'Ten wskaźnik pojawia się, gdy masz niezapisane zmiany. Pamiętaj, aby pobrać plik przed zamknięciem strony!',
+      side: 'bottom' as const,
+      align: 'center' as const,
+    },
+  },
+  {
     element: '#group-tabs',
     popover: {
       title: 'Zakładki grup',
