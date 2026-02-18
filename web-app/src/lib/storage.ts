@@ -98,7 +98,11 @@ export function listFiles(): SavedFileInfo[] {
 
 /** Save the files index */
 function saveIndex(files: SavedFileInfo[]): void {
-  localStorage.setItem(FILES_INDEX_KEY, JSON.stringify(files));
+  try {
+    localStorage.setItem(FILES_INDEX_KEY, JSON.stringify(files));
+  } catch {
+    // localStorage may be full or unavailable
+  }
 }
 
 /** Save file data to localStorage (creates or updates) */
@@ -108,7 +112,12 @@ export function saveFile(id: string, name: string, groups: Group[]): void {
     players: g.players.map(stripComputed),
   }));
 
-  localStorage.setItem(FILE_DATA_PREFIX + id, JSON.stringify(storedGroups));
+  try {
+    localStorage.setItem(FILE_DATA_PREFIX + id, JSON.stringify(storedGroups));
+  } catch {
+    // localStorage may be full or unavailable
+    return;
+  }
 
   const files = listFiles();
   const existing = files.findIndex((f) => f.id === id);
