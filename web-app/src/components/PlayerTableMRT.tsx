@@ -56,13 +56,6 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
     }
   }, [resetScrollKey]);
 
-  // Check if a player row is valid (has required fields)
-  const isPlayerValid = (player: Player): boolean => {
-    const hasValidFirstName = player.firstName.trim().length > 0;
-    const hasValidLastName = player.lastName.trim().length > 0;
-    return hasValidFirstName && hasValidLastName;
-  };
-
   const handleAddPlayerClick = () => {
     setNewPlayerFirstName('');
     setNewPlayerLastName('');
