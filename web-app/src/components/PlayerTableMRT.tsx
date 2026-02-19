@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { MaterialReactTable, type MRT_ColumnDef } from 'material-react-table';
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography } from '@mui/material';
 import type { Player } from '../lib/types';
 import { createEmptyPlayer } from '../lib/types';
 import { calculateSprint30mScore, calculateMedicineBallScore, calculateFiveJumpScore } from '../lib/scoring';
@@ -39,11 +39,36 @@ const PLACEHOLDERS: Record<string, string> = {
 
 type PlayerWithRowNumber = Player & { rowNumber: number };
 
+type AddPlayerFormState = {
+  firstName: string;
+  lastName: string;
+  sprint30m_time: string;
+  medicineBall_forward: string;
+  medicineBall_backward: string;
+  fiveJump_distance: string;
+  handThrow_distance: string;
+  handThrow_score: string;
+  envelope_time: string;
+  envelope_score: string;
+};
+
+const EMPTY_ADD_PLAYER_FORM: AddPlayerFormState = {
+  firstName: '',
+  lastName: '',
+  sprint30m_time: '',
+  medicineBall_forward: '',
+  medicineBall_backward: '',
+  fiveJump_distance: '',
+  handThrow_distance: '',
+  handThrow_score: '',
+  envelope_time: '',
+  envelope_score: '',
+};
+
 export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKey }: PlayerTableProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newPlayerFirstName, setNewPlayerFirstName] = useState('');
-  const [newPlayerLastName, setNewPlayerLastName] = useState('');
+  const [newPlayerForm, setNewPlayerForm] = useState<AddPlayerFormState>(EMPTY_ADD_PLAYER_FORM);
   const [addDialogError, setAddDialogError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
@@ -57,8 +82,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
   }, [resetScrollKey]);
 
   const handleAddPlayerClick = () => {
-    setNewPlayerFirstName('');
-    setNewPlayerLastName('');
+    setNewPlayerForm(EMPTY_ADD_PLAYER_FORM);
     setAddDialogError(null);
     setAddDialogOpen(true);
   };
@@ -69,17 +93,59 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
   };
 
   const handleAddPlayerConfirm = () => {
-    const firstName = newPlayerFirstName.trim().slice(0, 15);
-    const lastName = newPlayerLastName.trim().slice(0, 15);
+    const firstName = newPlayerForm.firstName.trim().slice(0, 15);
+    const lastName = newPlayerForm.lastName.trim().slice(0, 15);
 
     if (!firstName || !lastName) {
       setAddDialogError('Uzupełnij imię i nazwisko.');
       return;
     }
 
+    const numericFieldKeys: Array<keyof AddPlayerFormState> = [
+      'sprint30m_time',
+      'medicineBall_forward',
+      'medicineBall_backward',
+      'fiveJump_distance',
+      'handThrow_distance',
+      'handThrow_score',
+      'envelope_time',
+      'envelope_score',
+    ];
+
     const newPlayer = createEmptyPlayer();
     newPlayer.firstName = firstName;
     newPlayer.lastName = lastName;
+
+    for (const key of numericFieldKeys) {
+      const rawValue = newPlayerForm[key].trim();
+      if (!rawValue) continue;
+
+      const parsedValue = Number(rawValue);
+      if (isNaN(parsedValue)) {
+        setAddDialogError(`Pole "${PLACEHOLDERS[key] || key}" musi zawierać liczbę.`);
+        return;
+      }
+
+      const rule = VALIDATION_RULES[key];
+      if (rule && (parsedValue < rule.min || parsedValue > rule.max)) {
+        setAddDialogError(rule.message);
+        return;
+      }
+
+      (newPlayer as unknown as Record<string, number | null>)[key] = parsedValue;
+    }
+
+    if (newPlayer.sprint30m_time !== null) {
+      newPlayer.sprint30m_score = calculateSprint30mScore(newPlayer.sprint30m_time);
+    }
+    if (newPlayer.medicineBall_forward !== null && newPlayer.medicineBall_backward !== null) {
+      newPlayer.medicineBall_sum = newPlayer.medicineBall_forward + newPlayer.medicineBall_backward;
+      newPlayer.medicineBall_score = calculateMedicineBallScore(newPlayer.medicineBall_sum);
+    }
+    if (newPlayer.fiveJump_distance !== null) {
+      newPlayer.fiveJump_score = calculateFiveJumpScore(newPlayer.fiveJump_distance);
+    }
+
     onUpdatePlayers([...players, newPlayer]);
     setAddDialogOpen(false);
     setAddDialogError(null);
@@ -467,21 +533,77 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
         <DialogTitle>Dodaj zawodnika</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 1, display: 'grid', gap: 1.5 }}>
-            <input
-              type="text"
-              value={newPlayerFirstName}
-              onChange={(event) => setNewPlayerFirstName(event.target.value)}
-              placeholder="Imię"
-              maxLength={15}
-              style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid #cbd5e0', fontSize: 14 }}
+            <TextField
+              label="Imię"
+              value={newPlayerForm.firstName}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, firstName: event.target.value }))}
+              inputProps={{ maxLength: 15 }}
+              required
+              size="small"
             />
-            <input
-              type="text"
-              value={newPlayerLastName}
-              onChange={(event) => setNewPlayerLastName(event.target.value)}
-              placeholder="Nazwisko"
-              maxLength={15}
-              style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid #cbd5e0', fontSize: 14 }}
+            <TextField
+              label="Nazwisko"
+              value={newPlayerForm.lastName}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, lastName: event.target.value }))}
+              inputProps={{ maxLength: 15 }}
+              required
+              size="small"
+            />
+            <TextField
+              label="Czas 30m"
+              value={newPlayerForm.sprint30m_time}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, sprint30m_time: event.target.value }))}
+              placeholder={PLACEHOLDERS.sprint30m_time}
+              size="small"
+            />
+            <TextField
+              label="Lekarska przód"
+              value={newPlayerForm.medicineBall_forward}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, medicineBall_forward: event.target.value }))}
+              placeholder={PLACEHOLDERS.medicineBall_forward}
+              size="small"
+            />
+            <TextField
+              label="Lekarska tył"
+              value={newPlayerForm.medicineBall_backward}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, medicineBall_backward: event.target.value }))}
+              placeholder={PLACEHOLDERS.medicineBall_backward}
+              size="small"
+            />
+            <TextField
+              label="Pięcioskok dystans"
+              value={newPlayerForm.fiveJump_distance}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, fiveJump_distance: event.target.value }))}
+              placeholder={PLACEHOLDERS.fiveJump_distance}
+              size="small"
+            />
+            <TextField
+              label="Rzut ręczny dystans"
+              value={newPlayerForm.handThrow_distance}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, handThrow_distance: event.target.value }))}
+              placeholder={PLACEHOLDERS.handThrow_distance}
+              size="small"
+            />
+            <TextField
+              label="Wynik rzut ręczny"
+              value={newPlayerForm.handThrow_score}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, handThrow_score: event.target.value }))}
+              placeholder={PLACEHOLDERS.handThrow_score}
+              size="small"
+            />
+            <TextField
+              label="Czas koperta"
+              value={newPlayerForm.envelope_time}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, envelope_time: event.target.value }))}
+              placeholder={PLACEHOLDERS.envelope_time}
+              size="small"
+            />
+            <TextField
+              label="Wynik koperta"
+              value={newPlayerForm.envelope_score}
+              onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, envelope_score: event.target.value }))}
+              placeholder={PLACEHOLDERS.envelope_score}
+              size="small"
             />
             {addDialogError && (
               <Typography color="error" variant="body2">
