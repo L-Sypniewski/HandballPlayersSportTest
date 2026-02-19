@@ -37,6 +37,19 @@ const PLACEHOLDERS: Record<string, string> = {
   envelope_score: '0 - 80',
 };
 
+const FIELD_LABELS: Record<string, string> = {
+  sprint30m_time: 'Czas 30m',
+  medicineBall_forward: 'Lekarska przód',
+  medicineBall_backward: 'Lekarska tył',
+  fiveJump_distance: 'Pięcioskok dystans',
+  handThrow_distance: 'Rzut ręczny dystans',
+  handThrow_score: 'Wynik rzut ręczny',
+  envelope_time: 'Czas koperta',
+  envelope_score: 'Wynik koperta',
+};
+
+const normalizeDecimalValue = (value: string): string => value.replace(/,/g, '.');
+
 type PlayerWithRowNumber = Player & { rowNumber: number };
 
 type AddPlayerFormState = {
@@ -97,7 +110,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
     const lastName = newPlayerForm.lastName.trim().slice(0, 15);
 
     if (!firstName || !lastName) {
-      setAddDialogError('Uzupełnij imię i nazwisko.');
+      setAddDialogError('Pola "Imię" i "Nazwisko" są wymagane.');
       return;
     }
 
@@ -118,11 +131,14 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
 
     for (const key of numericFieldKeys) {
       const rawValue = newPlayerForm[key].trim();
-      if (!rawValue) continue;
+      if (!rawValue) {
+        setAddDialogError(`Pole "${FIELD_LABELS[key] || key}" jest wymagane.`);
+        return;
+      }
 
-      const parsedValue = Number(rawValue);
+      const parsedValue = Number(normalizeDecimalValue(rawValue));
       if (isNaN(parsedValue)) {
-        setAddDialogError(`Pole "${PLACEHOLDERS[key] || key}" musi zawierać liczbę.`);
+        setAddDialogError(`Pole "${FIELD_LABELS[key] || key}" musi zawierać liczbę.`);
         return;
       }
 
@@ -198,7 +214,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
           return next;
         });
       } else {
-        const numVal = Number(strValue);
+        const numVal = Number(normalizeDecimalValue(strValue));
         if (isNaN(numVal)) {
           setValidationErrors(prev => ({ ...prev, [inputKey]: 'Wymagana liczba' }));
           return;
@@ -554,6 +570,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.sprint30m_time}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, sprint30m_time: event.target.value }))}
               placeholder={PLACEHOLDERS.sprint30m_time}
+              required
               size="small"
             />
             <TextField
@@ -561,6 +578,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.medicineBall_forward}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, medicineBall_forward: event.target.value }))}
               placeholder={PLACEHOLDERS.medicineBall_forward}
+              required
               size="small"
             />
             <TextField
@@ -568,6 +586,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.medicineBall_backward}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, medicineBall_backward: event.target.value }))}
               placeholder={PLACEHOLDERS.medicineBall_backward}
+              required
               size="small"
             />
             <TextField
@@ -575,6 +594,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.fiveJump_distance}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, fiveJump_distance: event.target.value }))}
               placeholder={PLACEHOLDERS.fiveJump_distance}
+              required
               size="small"
             />
             <TextField
@@ -582,6 +602,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.handThrow_distance}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, handThrow_distance: event.target.value }))}
               placeholder={PLACEHOLDERS.handThrow_distance}
+              required
               size="small"
             />
             <TextField
@@ -589,6 +610,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.handThrow_score}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, handThrow_score: event.target.value }))}
               placeholder={PLACEHOLDERS.handThrow_score}
+              required
               size="small"
             />
             <TextField
@@ -596,6 +618,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.envelope_time}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, envelope_time: event.target.value }))}
               placeholder={PLACEHOLDERS.envelope_time}
+              required
               size="small"
             />
             <TextField
@@ -603,6 +626,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
               value={newPlayerForm.envelope_score}
               onChange={(event) => setNewPlayerForm((prev) => ({ ...prev, envelope_score: event.target.value }))}
               placeholder={PLACEHOLDERS.envelope_score}
+              required
               size="small"
             />
             {addDialogError && (
