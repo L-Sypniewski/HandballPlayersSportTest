@@ -41,6 +41,10 @@ type PlayerWithRowNumber = Player & { rowNumber: number };
 
 export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKey }: PlayerTableProps) {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newPlayerFirstName, setNewPlayerFirstName] = useState('');
+  const [newPlayerLastName, setNewPlayerLastName] = useState('');
+  const [addDialogError, setAddDialogError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<number | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -59,18 +63,33 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
     return hasValidFirstName && hasValidLastName;
   };
 
-  const handleAddPlayer = () => {
-    // Check if all existing players are valid before adding a new one
-    const invalidPlayerIndex = players.findIndex(p => !isPlayerValid(p));
-    if (invalidPlayerIndex !== -1) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [`${invalidPlayerIndex}-firstName`]: players[invalidPlayerIndex].firstName.trim() === '' ? 'Imię jest wymagane' : '',
-        [`${invalidPlayerIndex}-lastName`]: players[invalidPlayerIndex].lastName.trim() === '' ? 'Nazwisko jest wymagane' : '',
-      }));
+  const handleAddPlayerClick = () => {
+    setNewPlayerFirstName('');
+    setNewPlayerLastName('');
+    setAddDialogError(null);
+    setAddDialogOpen(true);
+  };
+
+  const handleAddPlayerCancel = () => {
+    setAddDialogOpen(false);
+    setAddDialogError(null);
+  };
+
+  const handleAddPlayerConfirm = () => {
+    const firstName = newPlayerFirstName.trim().slice(0, 15);
+    const lastName = newPlayerLastName.trim().slice(0, 15);
+
+    if (!firstName || !lastName) {
+      setAddDialogError('Uzupełnij imię i nazwisko.');
       return;
     }
-    onUpdatePlayers([...players, createEmptyPlayer()]);
+
+    const newPlayer = createEmptyPlayer();
+    newPlayer.firstName = firstName;
+    newPlayer.lastName = lastName;
+    onUpdatePlayers([...players, newPlayer]);
+    setAddDialogOpen(false);
+    setAddDialogError(null);
   };
 
   const handleDeleteClick = (rowIndex: number) => {
@@ -432,7 +451,7 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
       <Button
         id="add-player-btn"
         variant="outlined"
-        onClick={handleAddPlayer}
+        onClick={handleAddPlayerClick}
         sx={{
           mt: 1.5,
           py: 1.25,
@@ -450,6 +469,41 @@ export default function PlayerTableMRT({ players, onUpdatePlayers, resetScrollKe
       >
         + Dodaj zawodnika
       </Button>
+
+      <Dialog open={addDialogOpen} onClose={handleAddPlayerCancel} fullWidth maxWidth="sm">
+        <DialogTitle>Dodaj zawodnika</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 1, display: 'grid', gap: 1.5 }}>
+            <input
+              type="text"
+              value={newPlayerFirstName}
+              onChange={(event) => setNewPlayerFirstName(event.target.value)}
+              placeholder="Imię"
+              maxLength={15}
+              style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid #cbd5e0', fontSize: 14 }}
+            />
+            <input
+              type="text"
+              value={newPlayerLastName}
+              onChange={(event) => setNewPlayerLastName(event.target.value)}
+              placeholder="Nazwisko"
+              maxLength={15}
+              style={{ padding: '10px 12px', borderRadius: 6, border: '1px solid #cbd5e0', fontSize: 14 }}
+            />
+            {addDialogError && (
+              <Typography color="error" variant="body2">
+                {addDialogError}
+              </Typography>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAddPlayerCancel}>Anuluj</Button>
+          <Button variant="contained" onClick={handleAddPlayerConfirm}>
+            Dodaj
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
