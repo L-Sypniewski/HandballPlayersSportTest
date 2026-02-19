@@ -74,7 +74,9 @@ export default function GroupTabs({
               className={styles.removeBtn}
               onClick={(e) => {
                 e.stopPropagation();
-                onRemoveGroup(index);
+                if (confirm(`Czy na pewno chcesz usunąć grupę "${group.name}"?`)) {
+                  onRemoveGroup(index);
+                }
               }}
               title="Usuń grupę"
             >
