@@ -10,6 +10,7 @@ import {
   createFile,
   type SavedFileInfo,
 } from '../lib/storage';
+import { trackEvent, AnalyticsEvents } from '../lib/analytics';
 import FileControls from './FileControls';
 import FileManager from './FileManager';
 import GroupTabs from './GroupTabs';
@@ -87,6 +88,7 @@ export default function App() {
       setActiveGroupIndex(0);
       setSavedFiles(listFiles());
       setScrollResetKey((k) => k + 1);
+      trackEvent(AnalyticsEvents.FILE_UPLOAD, { groupCount: loaded.length });
     } catch (err) {
       setError(`Nie udało się odczytać pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -111,6 +113,7 @@ export default function App() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      trackEvent(AnalyticsEvents.FILE_DOWNLOAD, { groupCount: groups.length });
     } catch (err) {
       setError(`Nie udało się utworzyć pliku: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -130,6 +133,7 @@ export default function App() {
     setError(null);
     setSavedFiles(listFiles());
     setScrollResetKey((k) => k + 1);
+    trackEvent(AnalyticsEvents.FILE_CREATE);
   };
 
   const handleSelectFile = (id: string) => {
@@ -146,6 +150,7 @@ export default function App() {
     setActiveGroupIndex(0);
     setError(null);
     setScrollResetKey((k) => k + 1);
+    trackEvent(AnalyticsEvents.FILE_SELECT, { groupCount: loaded.length });
   };
 
   const handleDeleteFile = (id: string) => {
@@ -157,12 +162,14 @@ export default function App() {
       setGroups([]);
       setActiveGroupIndex(0);
     }
+    trackEvent(AnalyticsEvents.FILE_DELETE);
   };
 
   const handleAddGroup = () => {
     const newName = `Grupa ${groups.length + 1}`;
     setGroups([...groups, { name: newName, players: [] }]);
     setActiveGroupIndex(groups.length);
+    trackEvent(AnalyticsEvents.GROUP_ADD, { totalGroups: groups.length + 1 });
   };
 
   const handleRemoveGroup = (index: number) => {
@@ -170,12 +177,14 @@ export default function App() {
     const updated = groups.filter((_, i) => i !== index);
     setGroups(updated);
     setActiveGroupIndex(Math.min(activeGroupIndex, updated.length - 1));
+    trackEvent(AnalyticsEvents.GROUP_REMOVE, { totalGroups: updated.length });
   };
 
   const handleRenameGroup = (index: number, newName: string) => {
     const updated = [...groups];
     updated[index] = { ...updated[index], name: newName };
     setGroups(updated);
+    trackEvent(AnalyticsEvents.GROUP_RENAME);
   };
 
   const handleUpdatePlayers = (players: Group['players']) => {
@@ -187,6 +196,7 @@ export default function App() {
 
   const handleTourStart = () => {
     setIsTourActive(true);
+    trackEvent(AnalyticsEvents.TOUR_START);
     if (groups.length === 0) {
       isShowingSampleDataRef.current = true;
       setGroups(createSampleGroups());
@@ -196,6 +206,7 @@ export default function App() {
 
   const handleTourEnd = () => {
     setIsTourActive(false);
+    trackEvent(AnalyticsEvents.TOUR_COMPLETE);
     if (isShowingSampleDataRef.current) {
       setGroups([]);
       setActiveGroupIndex(0);
